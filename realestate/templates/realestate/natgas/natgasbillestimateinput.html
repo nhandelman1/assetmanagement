@@ -1,0 +1,55 @@
+{% extends "realestate/natgas/natgasbase.html" %}
+
+{% block title %}Input Estimate Data{% endblock title %}
+{% block headertitle %}Input Estimate Data{% endblock headertitle %}
+
+{% block content %}
+<h3>Required Data: Entered on Previous Page or Inferred</h3>
+<p>{{ form.real_estate.label }}: {{ form.real_estate }}</p>
+<p>{{ form.service_provider.label }}: {{ form.service_provider }}</p>
+<p>{{ form.start_date.label }}: {{ form.start_date }}</p>
+<p>{{ form.end_date.label }}: {{ form.end_date }}</p>
+
+<h3>Required Data: Created Previously From Other Workflows</h3>
+{% if actual_message == "Found" %}
+    <div style="color: green;">Actual Bill: {{ actual_message }}</div>
+{% else %}
+    <div style="color: red;">Actual Bill: {{ actual_message }}</div>
+{% endif %}
+{% if estimated_message == "Not Found" %}
+    <div style="color: green;">Estimated Bill: {{ estimated_message }}</div>
+{% else %}
+    <div style="color: red;">Estimated Bill: {{ estimated_message }}</div>
+{% endif %}
+{% if start_month_message == "Found" %}
+    <div style="color: green;">Start Month Natural Gas Data: {{ start_month_message }}</div>
+{% else %}
+    <div style="color: red;">Start Month Natural Gas Data: {{ start_month_message }}</div>
+{% endif %}
+{% if end_month_message == "Found" %}
+    <div style="color: green;">End Month Natural Gas Data: {{ end_month_message }}</div>
+{% else %}
+    <div style="color: red;">End Month Natural Gas Data: {{ end_month_message }}</div>
+{% endif %}
+
+<h3>Required Data: Input Data Here</h3>
+{% if form.allow_create.value %}
+    <form action="{% url 'realestate:natgasbillestimateinput' %}" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <p>
+            {{ form.saved_therms.label }}: {{form.saved_therms}}
+        </p>
+        {{ form.real_estate.as_hidden }}
+        {{ form.service_provider.as_hidden }}
+        {{ form.start_date.as_hidden }}
+        {{ form.end_date.as_hidden }}
+        {{ form.allow_create.as_hidden }}
+        <p><input type="submit" value="Create"></p>
+    </form>
+{% else %}
+    <div style="color: red;">Unable to continue. Required data created in other workflows is missing or the
+        estimated bill has already been created.
+    </div>
+{% endif %}
+<p><a href="{% url 'realestate:natgasbillestimateselect' %}">Estimate Natural Gas Bill</a></p>
+{% endblock content %}

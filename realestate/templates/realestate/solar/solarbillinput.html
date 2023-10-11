@@ -1,0 +1,28 @@
+{% extends "realestate/solar/solarbase.html" %}
+
+{% block title %}Input Solar Bill Dates and Hourly Usage File{% endblock title %}
+{% block headertitle %}Input Solar Bill Dates and Hourly Usage File{% endblock headertitle %}
+
+{% block content %}
+<p>
+    Consider if solar bill start and end dates should match with electric bill start and end dates for the
+    associated property. Since there isn't really a 'bill' for solar, solar usage is typically compared to
+    electric utility usage over a certain period.
+</p>
+<p>
+    Solar KWH and Home KWH are calculated using hourly usage data in the database or in the hourly usage file
+    if there is no data in the database.
+</p>
+<p>
+    Opportunity cost pnl percent is the return of the SP 500 Total Return Index from the close of the day
+    before start date to the close of end date.
+</p>
+<p>
+    Disabled fields not previously mentioned are calculated from enabled fields, solar kwh and home kwh.
+</p>
+<form action="{% url 'realestate:solarbillinput' %}" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{form.as_p}}
+    <p><input type="submit" value="Input"></p>
+</form>
+{% endblock content %}

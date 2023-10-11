@@ -1,0 +1,12 @@
+{% extends "realestate/mortgage/mortgagebase.html" %}
+
+{% block title %}Mortgage Bill File Upload{% endblock title %}
+{% block headertitle %}Mortgage Bill File Upload{% endblock headertitle %}
+
+{% block content %}
+<form action="{% url 'realestate:mortgagebillupload' %}" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <p>Select Mortgage Bill: {{ form.file }}</p>
+    <p><input type="submit" value="Upload"></p>
+</form>
+{% endblock content %}

@@ -1,0 +1,18 @@
+{% extends "realestate/natgas/natgasbase.html" %}
+
+{% block title %}Natural Gas Bill File Upload Success{% endblock title %}
+{% block headertitle %}Natural Gas Bill File Upload Success{% endblock headertitle %}
+
+{% block content %}
+<p>
+    Data has been saved. Make any changes to tax related cost, paid date and notes below and select 'Save'. <br>
+    Paid date can be left blank if bill has not been paid. <br>
+    {{ tax_rel_msg }}
+</p>
+<form action="{% url 'realestate:natgasbilluploadsuccess' %}" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type='hidden' value='{{ form.instance.pk }}' name='id'>
+    {{ form.as_p }}
+    <p><input type="submit" value="Save"></p>
+</form>
+{% endblock content %}

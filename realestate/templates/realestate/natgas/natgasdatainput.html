@@ -1,0 +1,15 @@
+{% extends "realestate/natgas/natgasbase.html" %}
+
+{% block title %}Natural Gas Data Input or Modify{% endblock title %}
+{% block headertitle %}Natural Gas Data Input or Modify{% endblock headertitle %}
+
+{% block content %}
+<p>{{found_message}}</p>
+<!-- Upload form. Note enctype attribute! -->
+<form action="{% url 'realestate:natgasdatainput' %}" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type='hidden' value='{{ form.instance.pk }}' name='id'>
+    {{form.as_p}}
+    <p><input type="submit" value="Save"></p>
+</form>
+{% endblock content %}

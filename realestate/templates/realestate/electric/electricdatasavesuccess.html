@@ -1,0 +1,9 @@
+{% extends "realestate/electric/electricbase.html" %}
+
+{% block title %}Electric Data Save Success{% endblock title %}
+{% block headertitle %}Electric Data Save Success{% endblock headertitle %}
+
+{% block content %}
+<p>Electric data successfully saved.</p>
+<p><a href="{% url 'realestate:electricdataselect' %}">Input Electric Data</a></p>
+{% endblock content %}

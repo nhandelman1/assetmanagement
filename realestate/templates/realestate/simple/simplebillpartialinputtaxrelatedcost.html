@@ -1,0 +1,18 @@
+{% extends "realestate/simple/simplebase.html" %}
+
+{% block title %}Input Tax Related Cost for Partial Simple Bill{% endblock title %}
+{% block headertitle %}Input Tax Related Cost for Partial Simple Bill{% endblock headertitle %}
+
+{% block content %}
+<p>Partial bill(s) have been saved. Make any changes to tax related cost and notes below and select 'Save'</p>
+<form action="{% url 'realestate:simplebillpartialinputtaxrelatedcost' %}" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ formset.management_form }}
+    {% for form in formset %}
+        <br><br>
+        <h3>Newly Created Partial Simple Bill #{{forloop.counter}}</h3>
+        {{ form.as_p }}
+    {% endfor %}
+    <p><input type="submit" value="Save"></p>
+</form>
+{% endblock content %}

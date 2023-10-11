@@ -1,0 +1,13 @@
+{% extends "realestate/solar/solarbase.html" %}
+
+{% block title %}Solar Bill Created Successfully But Not Saved to Database{% endblock title %}
+{% block headertitle %}Solar Bill Created Successfully But Not Saved to Database{% endblock headertitle %}
+
+{% block content %}
+<p>Make any changes below and select 'Save' to save to database.</p>
+<form action="{% url 'realestate:solarbillupdate' %}" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{form.as_p}}
+    <p><input type="submit" value="Save"></p>
+</form>
+{% endblock content %}

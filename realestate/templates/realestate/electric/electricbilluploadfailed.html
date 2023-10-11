@@ -1,0 +1,12 @@
+{% extends "realestate/electric/electricbase.html" %}
+
+{% block title %}Electric Bill File Upload Failed{% endblock title %}
+{% block headertitle %}Electric Bill File Upload Failed{% endblock headertitle %}
+
+{% block content %}
+<p>
+    filename: {{ filename }} <br>
+    Error: {{ error }}
+</p>
+<p><a href="{% url 'realestate:electricbillupload' %}">Upload Electric Bill</a></p>
+{% endblock content %}

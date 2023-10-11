@@ -1,0 +1,32 @@
+{% extends "realestate/depreciation/depreciationbase.html" %}
+
+{% block title %}Depreciation Bills Created Successfully{% endblock title %}
+{% block headertitle %}Depreciation Bills Created Successfully{% endblock headertitle %}
+
+{% block content %}
+<p>
+    Data has been saved. Make any changes to period usage percent and notes below and select 'Save'. <br>
+    Period Usage Percent can be between 0 and 100 inclusive. This value is applied to both total cost and
+    tax related cost. <br>
+    Non depreciable items are listed last.
+</p>
+<form action="{% url 'realestate:depreciationbillupdate' %}" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ formset.management_form }}
+    {% for form in formset %}
+        <br><br>
+        <strong>Depreciation Bill #{{forloop.counter}}: {{form.instance.real_property_value.item}}</strong>
+        {{ form.as_p }}
+    {% endfor %}
+    <p><input type="submit" value="Save"></p>
+</form>
+<br><br>
+<p>
+    <strong>Non Depreciable Items</strong>
+    <br><br>
+    {% for nd in nd_list %}
+        {{ nd }}
+        <br><br>
+    {% endfor %}
+</p>
+{% endblock content %}

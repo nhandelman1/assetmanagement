@@ -1,0 +1,16 @@
+{% extends "realestate/natgas/natgasbase.html" %}
+
+{% block title %}Natural Gas Main Page{% endblock title %}
+{% block headertitle %}Natural Gas Main Page{% endblock headertitle %}
+
+{% block content %}
+<hr>
+<h3><u>Natural Gas Bill Options</u></h3>
+<p><a href="{% url 'realestate:natgasbillpartialselect' %}">Create Partial Natural Gas Bills</a></p>
+<p><a href="{% url 'realestate:natgasbillestimateselect' %}">Estimate Natural Gas Bill</a></p>
+<p><a href="{% url 'realestate:natgasbillupload' %}">Upload Natural Gas Bill</a></p>
+
+<hr>
+<h3><u>Natural Gas Data Options</u></h3>
+<p><a href="{% url 'realestate:natgasdataselect' %}">Input Natural Gas Data</a></p>
+{% endblock content %}

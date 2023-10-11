@@ -1,0 +1,12 @@
+{% extends "realestate/electric/electricbase.html" %}
+
+{% block title %}Electric Bill File Upload{% endblock title %}
+{% block headertitle %}Electric Bill File Upload{% endblock headertitle %}
+
+{% block content %}
+<form action="{% url 'realestate:electricbillupload' %}" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <p>Select Electric Bill: {{ form.file }}</p>
+    <p><input type="submit" value="Upload"></p>
+</form>
+{% endblock content %}

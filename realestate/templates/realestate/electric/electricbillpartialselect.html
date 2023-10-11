@@ -1,0 +1,12 @@
+{% extends "realestate/electric/electricbase.html" %}
+
+{% block title %}Select Criteria for Partial Electric Bill Creation{% endblock title %}
+{% block headertitle %}Select Criteria for Partial Electric Bill Creation{% endblock headertitle %}
+
+{% block content %}
+<form action="{% url 'realestate:electricbillpartialselect' %}" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{form.as_p}}
+    <p><input type="submit" value="Select"></p>
+</form>
+{% endblock content %}

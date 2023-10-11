@@ -1,0 +1,17 @@
+{% extends "realestate/electric/electricbase.html" %}
+
+{% block title %}Estimate Electric Bill{% endblock title %}
+{% block headertitle %}Estimate Electric Bill{% endblock headertitle %}
+
+{% block content %}
+<p>
+    Run process to estimate an electric bill and store data to table. Select a real estate, service provider
+    and actual bill start date.
+</p>
+<!-- Upload form. Note enctype attribute! -->
+<form action="{% url 'realestate:electricbillestimateselect' %}" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{form.as_p}}
+    <p><input type="submit" value="Search"></p>
+</form>
+{% endblock content %}

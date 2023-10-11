@@ -1,0 +1,11 @@
+{% extends "realestate/mortgage/mortgagebase.html" %}
+
+{% block title %}Mortgage Bill File Upload Failed{% endblock title %}
+{% block headertitle %}Mortgage Bill File Upload Failed{% endblock headertitle %}
+
+{% block content %}
+<p>
+    filename: {{ filename }} <br>
+    Error: {{ error }}
+</p>
+{% endblock content %}

@@ -1,0 +1,12 @@
+{% extends "realestate/mortgage/mortgagebase.html" %}
+
+{% block title %}Select Criteria for Partial Mortgage Bill Creation{% endblock title %}
+{% block headertitle %}Select Criteria for Partial Mortgage Bill Creation{% endblock headertitle %}
+
+{% block content %}
+<form action="{% url 'realestate:mortgagebillpartialselect' %}" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{form.as_p}}
+    <p><input type="submit" value="Select"></p>
+</form>
+{% endblock content %}

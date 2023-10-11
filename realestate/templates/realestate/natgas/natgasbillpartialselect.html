@@ -1,0 +1,12 @@
+{% extends "realestate/natgas/natgasbase.html" %}
+
+{% block title %}Select Criteria for Partial Natural Gas Bill Creation{% endblock title %}
+{% block headertitle %}Select Criteria for Partial Natural Gas Bill Creation{% endblock headertitle %}
+
+{% block content %}
+<form action="{% url 'realestate:natgasbillpartialselect' %}" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{form.as_p}}
+    <p><input type="submit" value="Select"></p>
+</form>
+{% endblock content %}

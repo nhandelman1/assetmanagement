@@ -1,0 +1,9 @@
+{% extends "realestate/simple/simplebase.html" %}
+
+{% block title %}Simple Main Page{% endblock title %}
+{% block headertitle %}Simple Main Page{% endblock headertitle %}
+
+{% block content %}
+<p>Use Admin to CRUD simple bills.</p>
+<p><a href="{% url 'realestate:simplebillpartialselect' %}">Create Partial Simple Bills</a></p>
+{% endblock content %}

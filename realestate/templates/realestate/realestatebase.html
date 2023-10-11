@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>{% block title %}Title{% endblock title%}</title>
+</head>
+
+<body>
+    <div id="header">
+        <h2>{% block headertitle %}Title{% endblock headertitle%}</h2>
+        {% block header %}{% endblock header %}
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div style="color: red;">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div id="content">
+        {% block content %}{% endblock content %}
+    </div>
+
+    <hr>
+
+    <div id="footer">
+        {% block footer %}{% endblock footer %}
+    </div>
+
+    <p><br><br><a href="{% url 'realestate:realestate' %}">Real Estate Home</a></p>
+    <p><br><br><a href="{% url 'home' %}">Site Home</a></p>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{% extends "realestate/simple/simplebase.html" %}
+
+{% block title %}Select Criteria for Partial Simple Bill Creation{% endblock title %}
+{% block headertitle %}Select Criteria for Partial Simple Bill Creation{% endblock headertitle %}
+
+{% block content %}
+<form action="{% url 'realestate:simplebillpartialselect' %}" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{form.as_p}}
+    <p><input type="submit" value="Select"></p>
+</form>
+{% endblock content %}

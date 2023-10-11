@@ -1,0 +1,12 @@
+{% extends "realestate/natgas/natgasbase.html" %}
+
+{% block title %}Natural Gas Bill File Upload{% endblock title %}
+{% block headertitle %}Natural Gas Bill File Upload{% endblock headertitle %}
+
+{% block content %}
+<form action="{% url 'realestate:natgasbillupload' %}" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <p>Select Natural Gas Bill: {{ form.file }}</p>
+    <p><input type="submit" value="Upload"></p>
+</form>
+{% endblock content %}

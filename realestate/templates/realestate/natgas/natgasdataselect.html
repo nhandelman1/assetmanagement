@@ -1,0 +1,13 @@
+{% extends "realestate/natgas/natgasbase.html" %}
+
+{% block title %}Select Criteria for Natural Gas Data Input{% endblock title %}
+{% block headertitle %}Select Criteria for Natural Gas Data Input{% endblock headertitle %}
+
+{% block content %}
+<p>Enter real estate, service provider, month and year.</p>
+<form action="{% url 'realestate:natgasdataselect' %}" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{form.as_p}}
+    <p><input type="submit" value="Select"></p>
+</form>
+{% endblock content %}

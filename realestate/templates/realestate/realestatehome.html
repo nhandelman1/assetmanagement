@@ -1,0 +1,15 @@
+{% extends "realestate/realestatebase.html" %}
+
+{% block title %}Real Estate Main Page{% endblock title %}
+{% block headertitle %}Real Estate Main Page{% endblock headertitle %}
+
+{% block content %}
+<hr>
+<h3><u>Services</u></h3>
+<p><a href="{% url 'realestate:depreciation' %}">Depreciation</a></p>
+<p><a href="{% url 'realestate:electric' %}">Electric</a></p>
+<p><a href="{% url 'realestate:mortgage' %}">Mortgage</a></p>
+<p><a href="{% url 'realestate:natgas' %}">Natural Gas</a></p>
+<p><a href="{% url 'realestate:simple' %}">Simple</a></p>
+<p><a href="{% url 'realestate:solar' %}">Solar</a></p>
+{% endblock content %}

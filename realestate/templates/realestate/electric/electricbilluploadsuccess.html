@@ -1,0 +1,19 @@
+{% extends "realestate/electric/electricbase.html" %}
+
+{% block title %}Electric Bill File Upload Success{% endblock title %}
+{% block headertitle %}Electric Bill File Upload Success{% endblock headertitle %}
+
+{% block content %}
+<p>
+    Electric bill file has been successfully uploaded and saved. Make any changes to tax related cost, paid date and
+    notes below and select 'Save'. <br>
+    Paid date can be left blank if bill has not been paid. <br>
+    {{ tax_rel_msg }}
+</p>
+<form action="{% url 'realestate:electricbilluploadsuccess' %}" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type='hidden' value='{{ form.instance.pk }}' name='id'>
+    {{ form.as_p }}
+    <p><input type="submit" value="Save"></p>
+</form>
+{% endblock content %}

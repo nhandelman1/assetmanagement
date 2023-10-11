@@ -1,0 +1,44 @@
+{% extends "realestate/simple/simplebase.html" %}
+
+{% block title %}Input Bill Ratio for Partial Simple Bill Creation{% endblock title %}
+{% block headertitle %}Input Bill Ratio for Partial Simple Bill Creation{% endblock headertitle %}
+
+{% block content %}
+<h3>Selection Criteria</h3>
+<p>
+    Load bills from real estate: {{ load_from_real_estate}} <br>
+    Create bills for real estate: {{ create_for_real_estate}} <br>
+    Service provider: {{ service_provider }} <br>
+    Year: {{ year }} <br>
+</p>
+<h3>Bill Data</h3>
+<p>
+    Number of bills that were loaded: {{ num_bills_loaded }} <br>
+    Number of bills that can be created: {{ num_bills_create }} <br>
+    Bills must have a paid date to be included in the loaded bill set. <br>
+    A new partial bill can only be created from an existing bill if the 'create for real estate' does not
+    already have a bill with the same service provider, start date and end date.
+</p>
+{% if formset|length == 0 %}
+    <p>No new bills can be created </p>
+    <p><a href="{% url 'realestate:simplebillpartialselect' %}">Create Partial Simple Bills</a></p>
+{% else %}
+    <p>For each bill, enter a ratio 0-1 (inclusive) of the existing bill(s) that the new bill(s) will be.</p>
+    <p></p>
+    <form action="{% url 'realestate:simplebillpartialinputbillratio' %}" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type='hidden' value='{{ load_from_real_estate }}' name='load_from_real_estate'>
+        <input type='hidden' value='{{ service_provider }}' name='service_provider'>
+        <input type='hidden' value='{{ year }}' name='year'>
+        <input type='hidden' value='{{ num_bills_loaded }}' name='num_bills_loaded'>
+        <input type='hidden' value='{{ num_bills_create }}' name='num_bills_create'>
+        {{ formset.management_form }}
+        {% for form in formset %}
+            <br><br>
+            <h3>Existing Simple Bill #{{forloop.counter}}</h3>
+            {{ form.as_p }}
+        {% endfor %}
+        <p><input type="submit" value="Create"></p>
+    </form>
+{% endif %}
+{% endblock content %}

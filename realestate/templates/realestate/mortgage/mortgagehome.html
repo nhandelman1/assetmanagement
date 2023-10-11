@@ -1,0 +1,9 @@
+{% extends "realestate/mortgage/mortgagebase.html" %}
+
+{% block title %}Mortgage Main Page{% endblock title %}
+{% block headertitle %}Mortgage Main Page{% endblock headertitle %}
+
+{% block content %}
+<p><a href="{% url 'realestate:mortgagebillpartialselect' %}">Create Partial Mortgage Bills</a></p>
+<p><a href="{% url 'realestate:mortgagebillupload' %}">Upload Mortgage Bill</a></p>
+{% endblock content %}

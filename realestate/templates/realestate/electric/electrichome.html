@@ -1,0 +1,16 @@
+{% extends "realestate/electric/electricbase.html" %}
+
+{% block title %}Electric Main Page{% endblock title %}
+{% block headertitle %}Electric Main Page{% endblock headertitle %}
+
+{% block content %}
+<hr>
+<h3><u>Electric Bill Options</u></h3>
+<p><a href="{% url 'realestate:electricbillpartialselect' %}">Create Partial Electric Bills</a></p>
+<p><a href="{% url 'realestate:electricbillestimateselect' %}">Estimate Electric Bill</a></p>
+<p><a href="{% url 'realestate:electricbillupload' %}">Upload Electric Bill</a></p>
+
+<hr>
+<h3><u>Electric Data Options</u></h3>
+<p><a href="{% url 'realestate:electricdataselect' %}">Input Electric Data</a></p>
+{% endblock content %}

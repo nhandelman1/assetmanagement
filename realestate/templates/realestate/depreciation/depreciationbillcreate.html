@@ -1,0 +1,17 @@
+{% extends "realestate/depreciation/depreciationbase.html" %}
+
+{% block title %}Create Depreciation Bills{% endblock title %}
+{% block headertitle %}Create Depreciation Bills{% endblock headertitle %}
+
+{% block content %}
+<p>
+    Run process to create depreciation bills and store data to table. Select a real estate, service provider
+    and year. The year must be a previous year.
+</p>
+<!-- Upload form. Note enctype attribute! -->
+<form action="{% url 'realestate:depreciationbillcreate' %}" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{form.as_p}}
+    <p><input type="submit" value="Create"></p>
+</form>
+{% endblock content %}

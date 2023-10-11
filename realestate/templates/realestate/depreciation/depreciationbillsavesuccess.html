@@ -1,0 +1,9 @@
+{% extends "realestate/depreciation/depreciationbase.html" %}
+
+{% block title %}Depreciation Bill Data Save Success{% endblock title %}
+{% block headertitle %}Depreciation Bill Data Save Success{% endblock headertitle %}
+
+{% block content %}
+<p>Depreciation bill(s) successfully saved.</p>
+<p><a href="{% url 'realestate:depreciationbillcreate' %}">Create Depreciation Bills</a></p>
+{% endblock content %}

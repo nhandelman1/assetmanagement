@@ -1,0 +1,17 @@
+{% extends "realestate/natgas/natgasbase.html" %}
+
+{% block title %}Estimate Natural Gas Bill{% endblock title %}
+{% block headertitle %}Estimate Natural Gas Bill{% endblock headertitle %}
+
+{% block content %}
+<p>
+    Run process to estimate a natural gas bill and store data to table. Select a real estate, service provider
+    and actual bill start date.
+</p>
+<!-- Upload form. Note enctype attribute! -->
+<form action="{% url 'realestate:natgasbillestimateselect' %}" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{form.as_p}}
+    <p><input type="submit" value="Search"></p>
+</form>
+{% endblock content %}

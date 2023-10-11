@@ -1,0 +1,14 @@
+{% extends "realestate/electric/electricbase.html" %}
+
+{% block title %}Estimated Electric Bill Created and Saved to Database{% endblock title %}
+{% block headertitle %}Estimated Electric Bill Created and Saved to Database{% endblock headertitle %}
+
+{% block content %}
+<p>The estimated bill data is provided below. No changes should be needed but can be made if necessary.</p>
+<form action="{% url 'realestate:electricbillestimateedit' %}" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type='hidden' value='{{ form.instance.pk }}' name='id'>
+    {{ form.as_p }}
+    <p><input type="submit" value="Save"></p>
+</form>
+{% endblock content %}
