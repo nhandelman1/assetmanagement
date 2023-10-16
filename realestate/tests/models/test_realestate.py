@@ -1,4 +1,4 @@
-from ..models import RealEstate
+from ...models.realestate import RealEstate
 from .djangomodeltestcasebase import DjangoModelTestCaseBase
 
 

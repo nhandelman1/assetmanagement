@@ -1,12 +1,7 @@
 from decimal import Decimal
 import datetime
-import unittest.mock
 
-from django.conf import settings
-from django.core.files import File
-from django.db.models import FileField
-
-from realestate.models import MortgageBillData
+from ...models.mortgagebilldata import MortgageBillData
 from .djangomodeltestcasebase import DjangoModelTestCaseBase
 from .test_realestate import RealEstateTests
 from .test_serviceprovider import ServiceProviderTests

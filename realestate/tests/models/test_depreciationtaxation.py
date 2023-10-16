@@ -1,10 +1,10 @@
 from decimal import Decimal
 import datetime
 
-from ..taxation import DepreciationTaxation, DepreciationType
+from ...taxation.depreciationtaxation import DepreciationTaxation
+from ..testcasebase import TestCaseBase
 from .test_depreciationbilldata import DepreciationBillDataTests
 from .test_realpropertyvalue import RealPropertyValueTests
-from .testcasebase import TestCaseBase
 
 
 class DepreciationTaxationTests(TestCaseBase):

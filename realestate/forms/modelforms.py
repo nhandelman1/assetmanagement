@@ -1,10 +1,21 @@
 from decimal import Decimal
 
 from django import forms
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 
-from ..models import DepreciationBillData, ElectricBillData, ElectricData, MortgageBillData, NatGasBillData, \
-    NatGasData, RealEstate, RealPropertyValue, ServiceProvider, SimpleBillData, SolarBillData, UtilityDataBase
+from ..models.depreciationbilldata import DepreciationBillData
+from ..models.electricbilldata import ElectricBillData
+from ..models.electricdata import ElectricData
+from ..models.mortgagebilldata import MortgageBillData
+from ..models.natgasbilldata import NatGasBillData
+from ..models.natgasdata import NatGasData
+from ..models.realestate import RealEstate
+from ..models.realpropertyvalue import RealPropertyValue
+from ..models.serviceprovider import ServiceProvider
+from ..models.simplebilldata import SimpleBillData
+from ..models.solarbilldata import SolarBillData
+from ..models.utilitydatabase import UtilityDataBase
 
 
 class BaseModelForm(forms.ModelForm):
@@ -28,14 +39,22 @@ class BaseModelForm(forms.ModelForm):
                         getattr(self.instance, field_name).name is None:
                     getattr(self.instance, field_name).name = self.data[field_name]
 
+    def make_editable(self, read_only_fields=(), disable_read_only_fields=False):
+        """ Convenience function for make_read_only()
+
+        Useful if caller intends for a small number of fields to be readonly
+        """
+        self.make_read_only(edit_fields=list(set(self.fields) - set(read_only_fields)),
+                            disable_read_only_fields=disable_read_only_fields)
+
     def make_read_only(self, edit_fields=(), disable_read_only_fields=False):
         """ Utility function to make the form read only except for specified fields
 
         Calling this function will have the following effects:
             Fields in edit_fields that are also required will be yellow highlighted
-            ModelChoiceFields: if not in edit fields, the choices are limited to the value set in the form instance and
-                the empty label is removed
-            FileField, CheckboxInput: readonly does not work for these fields so they are hidden if not in edit fields,
+            ModelChoiceFields: if not in edit fields, the choices are limited to the value set in the form instance
+                (which must be set before calling this function) and the empty label is removed
+            FileField, BooleanField: readonly does not work for these fields so they are hidden if not in edit fields,
                 hidden allows them to be included in POST data
             DateField: use DateInput widget if not in edit_fields. readonly does not work for SelectDateWidget
 
@@ -43,6 +62,9 @@ class BaseModelForm(forms.ModelForm):
             edit_fields (list(str)): fields in this list are editable. Default () for no editable fields
             disable_read_only_fields: True to also disable read only fields (disabled fields won't be included in POST
                 data). Default False to keep read only fields enabled.
+
+        Raises:
+            ValueError: if a ModelChoiceField is made read only but form instance is not set
         """
         for name, field in self.fields.items():
             if name in edit_fields:
@@ -53,12 +75,16 @@ class BaseModelForm(forms.ModelForm):
                     # setting attr readonly=True doesn't work for this field
                     field.empty_label = None
                     # TODO generalize this to work with variable number of fields
-                    if name == "real_estate":
-                        field.queryset = RealEstate.objects.filter(pk=self.instance.real_estate.pk)
-                    elif name == "service_provider":
-                        field.queryset = ServiceProvider.objects.filter(pk=self.instance.service_provider.pk)
+                    try:
+                        if name == "real_estate":
+                            field.queryset = RealEstate.objects.filter(pk=self.instance.real_estate.pk)
+                        elif name == "service_provider":
+                            field.queryset = ServiceProvider.objects.filter(pk=self.instance.service_provider.pk)
+                    except ObjectDoesNotExist:
+                        raise ValueError("Form instance must be set before " + name +
+                                         " ModelChoiceField can be made read only.")
                 else:
-                    if isinstance(field, (forms.FileField, forms.CheckboxInput)):
+                    if isinstance(field, (forms.FileField, forms.BooleanField)):
                         field.widget = forms.HiddenInput()
                     elif isinstance(field, forms.DateField):
                         field.widget = forms.DateInput()
@@ -68,14 +94,6 @@ class BaseModelForm(forms.ModelForm):
                 if disable_read_only_fields:
                     field.disabled = True
 
-    def make_editable(self, read_only_fields=(), disable_read_only_fields=False):
-        """ Convenience function for make_read_only()
-
-        Useful if caller intends for a small number of fields to be readonly
-        """
-        self.make_read_only(edit_fields=list(set(self.fields) - set(read_only_fields)),
-                            disable_read_only_fields=disable_read_only_fields)
-
     @classmethod
     def formset(cls, data=None, queryset=None, files=None, edit_fields=(), read_only_fields=(),
                 disable_read_only_fields=False, init_dict=None):
@@ -83,7 +101,7 @@ class BaseModelForm(forms.ModelForm):
 
         Args:
             data: form data
-            queryset (models.QuerySet):
+            queryset (models.QuerySet): only applied if data is None
             files: file data
             edit_fields: see cls.make_read_only()
             read_only_fields: see cls.make_editable(). only applied if edit_fields is empty
@@ -114,7 +132,7 @@ class BaseModelForm(forms.ModelForm):
                 form.make_read_only(edit_fields=edit_fields, disable_read_only_fields=disable_read_only_fields)
         elif len(read_only_fields) > 0:
             for form in formset:
-                form.make_editable(read_only_fields=edit_fields, disable_read_only_fields=disable_read_only_fields)
+                form.make_editable(read_only_fields=read_only_fields, disable_read_only_fields=disable_read_only_fields)
 
         for name, init_value in init_dict.items():
             for form in formset:
@@ -135,9 +153,13 @@ class DepreciationBillForm(BaseModelForm):
     def make_read_only(self, edit_fields=(), disable_read_only_fields=False):
         super().make_read_only(edit_fields=edit_fields, disable_read_only_fields=disable_read_only_fields)
 
-        if "real_property_value" not in edit_fields:
-            self.fields["real_property_value"].queryset = RealPropertyValue.objects.filter(
-                pk=self.instance.real_property_value.pk)
+        try:
+            if "real_property_value" not in edit_fields:
+                self.fields["real_property_value"].queryset = RealPropertyValue.objects.filter(
+                    pk=self.instance.real_property_value.pk)
+        except ObjectDoesNotExist:
+            raise ValueError("Form instance must be set before real_property_value ModelChoiceField can be made read "
+                             "only.")
 
 
 class ElectricBillForm(BaseModelForm):
@@ -213,7 +235,19 @@ class ElectricDataForm(UtilityDataForm):
     class Meta(UtilityDataForm.Meta):
         model = ElectricData
 
+    @classmethod
+    def formset(cls, data=None, queryset=None, files=None, edit_fields=(), read_only_fields=(),
+                disable_read_only_fields=False, init_dict=None):
+        # see __init__. if formset is implemented, it needs to implement estimate_note_query_set kwarg for all forms
+        raise NotImplementedError("formset not implemented for ElectricDataForm. ")
+
 
 class NatGasDataForm(UtilityDataForm):
     class Meta(UtilityDataForm.Meta):
         model = NatGasData
+
+    @classmethod
+    def formset(cls, data=None, queryset=None, files=None, edit_fields=(), read_only_fields=(),
+                disable_read_only_fields=False, init_dict=None):
+        # see __init__. if formset is implemented, it needs to implement estimate_note_query_set kwarg for all forms
+        raise NotImplementedError("formset not implemented for NatGasDataForm.")

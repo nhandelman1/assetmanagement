@@ -7,7 +7,7 @@ from django.shortcuts import render
 
 from ..forms.forms import SimpleServiceBillPartialSelectForm, UploadFileForm
 from ..forms.modelforms import MortgageBillForm, MortgageBillPartialInputRatioForm
-from ..models import MortgageBillData
+from ..models.mortgagebilldata import MortgageBillData
 
 
 def mortgage_home(request):

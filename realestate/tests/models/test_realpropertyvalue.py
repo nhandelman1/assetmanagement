@@ -1,7 +1,7 @@
 from decimal import Decimal
 import datetime
 
-from ..models import RealPropertyValue
+from ...models.realpropertyvalue import RealPropertyValue
 from .djangomodeltestcasebase import DjangoModelTestCaseBase
 from .test_realestate import RealEstateTests
 

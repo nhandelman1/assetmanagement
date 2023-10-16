@@ -8,7 +8,10 @@ from django.shortcuts import render
 from ..forms.forms import ComplexServiceBillEstimateSelectForm, ComplexServiceBillPartialSelectForm, \
     ElectricBillEstimateInputForm, UploadFileForm, UtilityDataSelectForm
 from ..forms.modelforms import ElectricBillForm, ElectricBillPartialInputRatioForm, ElectricDataForm
-from ..models import ElectricBillData, ElectricData, EstimateNote, MySunpowerHourlyData
+from ..models.electricbilldata import ElectricBillData
+from ..models.electricdata import ElectricData
+from ..models.estimatenote import EstimateNote
+from ..models.mysunpowerhourlydata import MySunpowerHourlyData
 
 
 def electric_home(request):

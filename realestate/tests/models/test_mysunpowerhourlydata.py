@@ -1,11 +1,11 @@
 from decimal import Decimal
 import datetime
 
-from realestate.models import MySunpowerHourlyData
+from ...models.mysunpowerhourlydata import MySunpowerHourlyData
 from .djangomodeltestcasebase import DjangoModelTestCaseBase
 
 
-class SolarBillDataTests(DjangoModelTestCaseBase):
+class MySunpowerHourlyDataTests(DjangoModelTestCaseBase):
 
     def equal(self, model1: MySunpowerHourlyData, model2: MySunpowerHourlyData):
         self.simple_equal(model1, model2, MySunpowerHourlyData)

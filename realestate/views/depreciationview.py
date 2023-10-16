@@ -5,7 +5,7 @@ from django.shortcuts import render
 
 from ..forms.forms import DepreciationBillSelectForm
 from ..forms.modelforms import DepreciationBillForm
-from ..models import DepreciationBillData
+from ..models.depreciationbilldata import DepreciationBillData
 
 
 def depreciation_home(request):

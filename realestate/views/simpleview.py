@@ -6,7 +6,7 @@ from django.shortcuts import render
 
 from ..forms.forms import SimpleServiceBillPartialSelectForm
 from ..forms.modelforms import SimpleBillForm, SimpleBillPartialInputRatioForm
-from ..models import SimpleBillData
+from ..models.simplebilldata import SimpleBillData
 
 
 def simple_home(request):

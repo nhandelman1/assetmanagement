@@ -1,7 +1,8 @@
 from decimal import Decimal
 import datetime
 
-from realestate.models import MySunpowerHourlyData, SolarBillData
+from ...models.mysunpowerhourlydata import MySunpowerHourlyData
+from ...models.solarbilldata import SolarBillData
 from .djangomodeltestcasebase import DjangoModelTestCaseBase
 from .test_realestate import RealEstateTests
 from .test_serviceprovider import ServiceProviderTests

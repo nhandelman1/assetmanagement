@@ -4,7 +4,8 @@ from django.db import IntegrityError
 from django.shortcuts import render
 
 from ..forms.modelforms import SolarBillForm
-from ..models import MySunpowerHourlyData, SolarBillData
+from ..models.mysunpowerhourlydata import MySunpowerHourlyData
+from ..models.solarbilldata import SolarBillData
 
 
 def solar_home(request):

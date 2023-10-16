@@ -1,9 +1,9 @@
 import datetime
 from decimal import Decimal
 
-from ..models import RealPropertyValue
-from ..taxation import DepreciationType
-from .testcasebase import TestCaseBase
+from ...models.realpropertyvalue import RealPropertyValue
+from ...taxation.depreciationtaxation import DepreciationType
+from ..testcasebase import TestCaseBase
 
 
 class DepreciationTypeTests(TestCaseBase):

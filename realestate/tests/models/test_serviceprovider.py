@@ -1,4 +1,4 @@
-from ..models import ServiceProvider
+from ...models.serviceprovider import ServiceProvider
 from .djangomodeltestcasebase import DjangoModelTestCaseBase
 
 
@@ -28,9 +28,14 @@ class ServiceProviderTests(DjangoModelTestCaseBase):
             provider=ServiceProvider.ServiceProviderEnum.NG_UTI, tax_category=ServiceProvider.TaxCategory.UTI)[0]
 
     @staticmethod
-    def service_provider_simple():
+    def service_provider_simple_nbins():
         return ServiceProvider.objects.get_or_create(
             provider=ServiceProvider.ServiceProviderEnum.NB_INS, tax_category=ServiceProvider.TaxCategory.INS)[0]
+
+    @staticmethod
+    def service_provider_simple_youtubetv():
+        return ServiceProvider.objects.get_or_create(
+            provider=ServiceProvider.ServiceProviderEnum.YTV_UTI, tax_category=ServiceProvider.TaxCategory.UTI)[0]
 
     @staticmethod
     def service_provider_solar():

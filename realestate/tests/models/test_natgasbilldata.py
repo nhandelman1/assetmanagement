@@ -1,7 +1,7 @@
 from decimal import Decimal
 import datetime
 
-from ..models import NatGasBillData
+from ...models.natgasbilldata import NatGasBillData
 from .djangomodeltestcasebase import DjangoModelTestCaseBase
 from .test_realestate import RealEstateTests
 from .test_serviceprovider import ServiceProviderTests

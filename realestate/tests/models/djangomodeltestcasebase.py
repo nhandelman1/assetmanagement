@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 from django.db.models import Model
 
-from .testcasebase import TestCaseBase
+from ..testcasebase import TestCaseBase
 
 
 class DjangoModelTestCaseBase(TestCaseBase, ABC):

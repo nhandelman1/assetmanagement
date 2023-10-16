@@ -2,8 +2,12 @@ import datetime
 
 from django import forms
 
-from ..models import ComplexServiceBillDataBase, DepreciationBillData, RealEstate, ServiceProvider, \
-    SimpleServiceBillDataBase, SolarBillData
+from ..models.complexservicebilldatabase import ComplexServiceBillDataBase
+from ..models.depreciationbilldata import DepreciationBillData
+from ..models.realestate import RealEstate
+from ..models.serviceprovider import ServiceProvider
+from ..models.simpleservicebilldatabase import SimpleServiceBillDataBase
+from ..models.solarbilldata import SolarBillData
 
 
 class ComplexServiceBillEstimateInputForm(forms.Form):
@@ -14,6 +18,15 @@ class ComplexServiceBillEstimateInputForm(forms.Form):
     allow_create = forms.BooleanField(widget=forms.HiddenInput())
 
     def __init__(self, *args, **kwargs):
+        """ init function override
+
+        start_date and end_date are set to readonly
+
+        Args:
+            *args:
+            **kwargs: "real_estate" and "service_provider" field choices limited to initial values, if initial values
+                are provided in "initial" keyword (a dict as expected by superclass)
+        """
         super().__init__(*args, **kwargs)
         if "real_estate" in self.initial:
             self.fields["real_estate"].queryset = RealEstate.objects.filter(pk=self.initial["real_estate"].pk)
@@ -38,6 +51,93 @@ class NatGasBillEstimateInputForm(ComplexServiceBillEstimateInputForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["saved_therms"].widget.attrs['style'] = 'background-color: yellow'
+
+
+class ComplexServiceBillEstimateSelectForm(forms.Form):
+    real_estate = forms.ModelChoiceField(RealEstate.objects.all(), empty_label=None)
+    service_provider = forms.ModelChoiceField(None, empty_label=None)
+    start_date = forms.DateField(widget=forms.SelectDateWidget())
+
+    def __init__(self, *args, **kwargs):
+        """ init override
+
+        Args:
+            *args:
+            **kwargs: must include keyword "utility_bill_data_model" with value that is a type that is a subclass of
+                ComplexServiceBillDataBase
+
+        Raises:
+            ValueError: if kwargs does not contain keyword "utility_bill_data_model" with value that is a type that
+                is a subclass of ComplexServiceBillDataBase
+        """
+        utility_bill_data_model = kwargs.pop("utility_bill_data_model", None)
+        if utility_bill_data_model is None or not issubclass(utility_bill_data_model, ComplexServiceBillDataBase):
+            raise ValueError("kwargs must have keyword utility_bill_data_model. value must be a type that is a "
+                             "subclass of ComplexServiceBillDataBase model")
+
+        super().__init__(*args, **kwargs)
+
+        self.fields["service_provider"].queryset = ServiceProvider.objects.filter(
+            provider__in=utility_bill_data_model.valid_providers())
+
+
+class DepreciationBillSelectForm(forms.Form):
+    real_estate = forms.ModelChoiceField(RealEstate.objects.all(), empty_label=None)
+    service_provider = forms.ModelChoiceField(
+        ServiceProvider.objects.filter(provider__in=DepreciationBillData.valid_providers()), empty_label=None)
+    year = forms.IntegerField(min_value=2000, max_value=2100)
+
+
+class SimpleServiceBillPartialSelectForm(forms.Form):
+    load_from_real_estate = forms.ModelChoiceField(RealEstate.objects.all())
+    create_for_real_estate = forms.ModelChoiceField(RealEstate.objects.all())
+    service_provider = forms.ModelChoiceField(None)
+    paid_year = forms.IntegerField(min_value=2000, max_value=2100)
+
+    def __init__(self, *args, **kwargs):
+        """ init override
+
+        Args:
+            *args:
+            **kwargs: must include keyword "utility_bill_data_model" with value that is a type that is a subclass of
+                SimpleServiceBillDataBase
+
+        Raises:
+            ValueError: if kwargs does not contain keyword "utility_bill_data_model" with value that is a type that
+                is a subclass of SimpleServiceBillDataBase
+        """
+        utility_bill_data_model = kwargs.pop("utility_bill_data_model", None)
+        if utility_bill_data_model is None or not issubclass(utility_bill_data_model, SimpleServiceBillDataBase):
+            raise ValueError("kwargs must have keyword utility_bill_data_model. value must be a type that is a "
+                             "subclass of SimpleServiceBillDataBase model")
+
+        super().__init__(*args, **kwargs)
+
+        self.fields["service_provider"].queryset = ServiceProvider.objects.filter(
+            provider__in=utility_bill_data_model.valid_providers())
+
+
+class ComplexServiceBillPartialSelectForm(SimpleServiceBillPartialSelectForm):
+    is_actual_bill = forms.BooleanField(initial=True, required=False)
+
+    def __init__(self, *args, **kwargs):
+        """ init override
+
+        Args:
+            *args:
+            **kwargs: must include keyword "utility_bill_data_model" with value that is a type that is a subclass of
+                ComplexServiceBillDataBase
+
+        Raises:
+            ValueError: if kwargs does not contain keyword "utility_bill_data_model" with value that is a type that
+                is a subclass of ComplexServiceBillDataBase
+        """
+        utility_bill_data_model = kwargs.get("utility_bill_data_model", None)
+        if utility_bill_data_model is None or not issubclass(utility_bill_data_model, ComplexServiceBillDataBase):
+            raise ValueError("kwargs must have keyword utility_bill_data_model. value must be a type that is a "
+                             "subclass of ComplexServiceBillDataBase model")
+
+        super().__init__(*args, **kwargs)
 
 
 class SolarBillInputFirstForm(forms.Form):
@@ -74,6 +174,17 @@ class UtilityDataSelectForm(forms.Form):
     month_year = forms.DateField(initial=datetime.date.today())
 
     def __init__(self, *args, **kwargs):
+        """ init override
+
+        Args:
+            *args:
+            **kwargs: must include keyword "utility_bill_data_model" with value that is a type that is a subclass of
+                ComplexServiceBillDataBase
+
+        Raises:
+            ValueError: if kwargs does not contain keyword "utility_bill_data_model" with value that is a type that
+                is a subclass of ComplexServiceBillDataBase
+        """
         utility_bill_data_model = kwargs.pop("utility_bill_data_model", None)
         if utility_bill_data_model is None or not issubclass(utility_bill_data_model, ComplexServiceBillDataBase):
             raise ValueError("kwargs must have keyword utility_bill_data_model. value must be a type that is a "
@@ -86,57 +197,3 @@ class UtilityDataSelectForm(forms.Form):
         self.fields["month_year"].widget.is_required = True
         self.fields["service_provider"].queryset = ServiceProvider.objects.filter(
             provider__in=utility_bill_data_model.valid_providers())
-
-
-class DepreciationBillSelectForm(forms.Form):
-    real_estate = forms.ModelChoiceField(RealEstate.objects.all(), empty_label=None)
-    service_provider = forms.ModelChoiceField(
-        ServiceProvider.objects.filter(provider__in=DepreciationBillData.valid_providers()), empty_label=None)
-    year = forms.IntegerField(min_value=2000, max_value=2100)
-
-
-class ComplexServiceBillEstimateSelectForm(forms.Form):
-    real_estate = forms.ModelChoiceField(RealEstate.objects.all(), empty_label=None)
-    service_provider = forms.ModelChoiceField(None, empty_label=None)
-    start_date = forms.DateField(widget=forms.SelectDateWidget())
-
-    def __init__(self, *args, **kwargs):
-        utility_bill_data_model = kwargs.pop("utility_bill_data_model", None)
-        if utility_bill_data_model is None or not issubclass(utility_bill_data_model, ComplexServiceBillDataBase):
-            raise ValueError("kwargs must have keyword utility_bill_data_model. value must be a type that is a "
-                             "subclass of ComplexServiceBillDataBase model")
-
-        super().__init__(*args, **kwargs)
-
-        self.fields["service_provider"].queryset = ServiceProvider.objects.filter(
-            provider__in=utility_bill_data_model.valid_providers())
-
-
-class SimpleServiceBillPartialSelectForm(forms.Form):
-    load_from_real_estate = forms.ModelChoiceField(RealEstate.objects.all())
-    create_for_real_estate = forms.ModelChoiceField(RealEstate.objects.all())
-    service_provider = forms.ModelChoiceField(None)
-    paid_year = forms.IntegerField(min_value=2000, max_value=2100)
-
-    def __init__(self, *args, **kwargs):
-        utility_bill_data_model = kwargs.pop("utility_bill_data_model", None)
-        if utility_bill_data_model is None or not issubclass(utility_bill_data_model, SimpleServiceBillDataBase):
-            raise ValueError("kwargs must have keyword utility_bill_data_model. value must be a type that is a "
-                             "subclass of SimpleServiceBillDataBase model")
-
-        super().__init__(*args, **kwargs)
-
-        self.fields["service_provider"].queryset = ServiceProvider.objects.filter(
-            provider__in=utility_bill_data_model.valid_providers())
-
-
-class ComplexServiceBillPartialSelectForm(SimpleServiceBillPartialSelectForm):
-    is_actual_bill = forms.BooleanField(initial=True)
-
-    def __init__(self, *args, **kwargs):
-        utility_bill_data_model = kwargs.get("utility_bill_data_model", None)
-        if utility_bill_data_model is None or not issubclass(utility_bill_data_model, ComplexServiceBillDataBase):
-            raise ValueError("kwargs must have keyword utility_bill_data_model. value must be a type that is a "
-                             "subclass of ComplexServiceBillDataBase model")
-
-        super().__init__(*args, **kwargs)

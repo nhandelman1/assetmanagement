@@ -8,7 +8,9 @@ from django.shortcuts import render
 from ..forms.forms import ComplexServiceBillEstimateSelectForm, ComplexServiceBillPartialSelectForm, \
     NatGasBillEstimateInputForm, UploadFileForm, UtilityDataSelectForm
 from ..forms.modelforms import NatGasBillForm, NatGasBillPartialInputRatioForm, NatGasDataForm
-from ..models import NatGasBillData, NatGasData, EstimateNote
+from ..models.natgasbilldata import NatGasBillData
+from ..models.natgasdata import NatGasData
+from ..models.estimatenote import EstimateNote
 
 
 def natgas_home(request):
