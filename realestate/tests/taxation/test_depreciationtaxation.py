@@ -2,9 +2,9 @@ from decimal import Decimal
 import datetime
 
 from ...taxation.depreciationtaxation import DepreciationTaxation
+from ..models.test_depreciationbilldata import DepreciationBillDataTests
+from ..models.test_realpropertyvalue import RealPropertyValueTests
 from ..testcasebase import TestCaseBase
-from .test_depreciationbilldata import DepreciationBillDataTests
-from .test_realpropertyvalue import RealPropertyValueTests
 
 
 class DepreciationTaxationTests(TestCaseBase):
@@ -14,7 +14,7 @@ class DepreciationTaxationTests(TestCaseBase):
 
     def test_calculate_accumulated_depreciation(self):
         dep_tax = DepreciationTaxation()
-        rpv = RealPropertyValueTests.real_property_value_house()
+        rpv = RealPropertyValueTests.real_property_value_house_apt()
         DepreciationBillDataTests.depreciation_bill_data_1()
         DepreciationBillDataTests.depreciation_bill_data_2()
 
@@ -27,7 +27,7 @@ class DepreciationTaxationTests(TestCaseBase):
 
     def test_calculate_depreciation_for_year(self):
         dep_tax = DepreciationTaxation()
-        rpv = RealPropertyValueTests.real_property_value_house()
+        rpv = RealPropertyValueTests.real_property_value_house_apt()
         DepreciationBillDataTests.depreciation_bill_data_1()
         DepreciationBillDataTests.depreciation_bill_data_2()
 

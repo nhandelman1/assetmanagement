@@ -83,6 +83,14 @@ class SimpleBillDataTests(DjangoModelTestCaseBase):
                   'changed from original.')[0]
 
     @staticmethod
+    def simple_bill_data_4():
+        return SimpleBillData.objects.get_or_create(
+            real_estate=RealEstateTests.real_estate_10wl(),
+            service_provider=ServiceProviderTests.service_provider_simple_youtubetv(),
+            start_date=datetime.date(2022, 2, 1), end_date=datetime.date(2022, 2, 28), total_cost=Decimal("32.50"),
+            tax_rel_cost=Decimal("32.50"), paid_date=datetime.date(2022, 2, 23), notes=None)[0]
+
+    @staticmethod
     def simple_bill_data_post_data():
         simple_bill_2 = SimpleBillDataTests.simple_bill_data_2()
         simple_bill_3 = SimpleBillDataTests.simple_bill_data_3()

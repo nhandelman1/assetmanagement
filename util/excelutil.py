@@ -217,6 +217,7 @@ class NumFmt(Enum):
     # Excel custom format. see openpyxl.styles.numbers
     GEN = "General"
     USD_COMMA_0 = "$#,##0"
+    COMMA_0 = "#,##0"
     COMMA_2 = "#,##0.00"
     COMMA_4 = "#,##0.0000"
     ROUND_4 = "#0.0000"

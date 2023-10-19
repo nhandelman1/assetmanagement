@@ -81,7 +81,7 @@ class DepreciationBillDataTests(DjangoModelTestCaseBase):
         return DepreciationBillData.objects.get_or_create(
             real_estate=RealEstateTests.real_estate_10wlapt1(),
             service_provider=ServiceProviderTests.service_provider_dep(),
-            real_property_value=RealPropertyValueTests.real_property_value_house(),
+            real_property_value=RealPropertyValueTests.real_property_value_house_apt(),
             start_date=datetime.date(2021, 1, 1), end_date=datetime.date(2021, 12, 31), period_usage_pct=Decimal(100),
             total_cost=Decimal("1408.00"), tax_rel_cost=Decimal("1408.00"), paid_date=datetime.date(2021, 12, 31),
             notes="Max depreciation possible for full period: 1408. Partial year depreciation. "
@@ -91,6 +91,16 @@ class DepreciationBillDataTests(DjangoModelTestCaseBase):
     def depreciation_bill_data_2():
         return DepreciationBillData.objects.get_or_create(
             real_estate=RealEstateTests.real_estate_10wlapt1(),
+            service_provider=ServiceProviderTests.service_provider_dep(),
+            real_property_value=RealPropertyValueTests.real_property_value_house_apt(),
+            start_date=datetime.date(2022, 1, 1), end_date=datetime.date(2022, 12, 31), period_usage_pct=Decimal(100),
+            total_cost=Decimal("3072.00"), tax_rel_cost=Decimal("3072.00"), paid_date=datetime.date(2022, 12, 31),
+            notes="Max depreciation possible for full period: 3072.")[0]
+
+    @staticmethod
+    def depreciation_bill_data_3():
+        return DepreciationBillData.objects.get_or_create(
+            real_estate=RealEstateTests.real_estate_10wl(),
             service_provider=ServiceProviderTests.service_provider_dep(),
             real_property_value=RealPropertyValueTests.real_property_value_house(),
             start_date=datetime.date(2022, 1, 1), end_date=datetime.date(2022, 12, 31), period_usage_pct=Decimal(100),

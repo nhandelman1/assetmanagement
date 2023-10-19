@@ -11,6 +11,7 @@ from .natgasview import natgas_home, natgas_bill_upload, natgas_bill_upload_succ
     natgas_data_select, natgas_bill_partial_input_tax_related_cost, natgas_bill_partial_input_bill_ratio, \
     natgas_bill_partial_select
 from .realestateview import real_estate_home
+from .reportview import report_home, bill_report_select, utility_savings_select
 from .simpleview import simple_home, simple_bill_partial_input_tax_related_cost, \
     simple_bill_partial_input_bill_ratio, simple_bill_partial_select
 from .solarview import solar_home, solar_bill_input, solar_bill_update

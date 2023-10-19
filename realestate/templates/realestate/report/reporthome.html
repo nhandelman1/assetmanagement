@@ -1,0 +1,12 @@
+{% extends "realestate/report/reportbase.html" %}
+
+{% block title %}Report Main Page{% endblock title %}
+{% block headertitle %}Report Main Page{% endblock headertitle %}
+
+{% block content %}
+<hr>
+<h3><u>Reports</u></h3>
+<p><a href="{% url 'realestate:billreportselect' %}">Bill Report</a></p>
+<p><a href="{% url 'realestate:utilitysavingsselect' %}">Utility Savings</a></p>
+
+{% endblock content %}

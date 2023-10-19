@@ -5,14 +5,14 @@ SET SQL_SAFE_UPDATES = 1;
 SET FOREIGN_KEY_CHECKS = 1;
 
 select * from realestate_natgasdata;
-select * from realestate_natgasbilldata order by start_date desc;
+select * from realestate_natgasbilldata where real_estate_id = 1 order by start_date desc;
 select * from realestate_electricbilldata order by start_date desc;
 select * from realestate_electricdata;
 select * from realestate_solarbilldata;
 select * from realestate_depreciationbilldata;
 select id, end_date, real_estate_id, total_cost, notes, bill_file from realestate_electricbilldata where is_actual=True;
 select * from realestate_electricdata;
-select * from realestate_estimatenote where service_provider_id = 3;
+select * from realestate_estimatenote;
 select * from realestate_mortgagebilldata order by start_date desc;
 select * from realestate_mysunpowerhourlydata;
 select id, end_date, real_estate_id, total_cost, notes, bill_file  from realestate_natgasbilldata where is_actual=True;
@@ -20,7 +20,7 @@ select * from realestate_natgasdata;
 select * from realestate_realestate;
 select * from realestate_realpropertyvalue;
 select * from realestate_serviceprovider;
-select * from realestate_simplebilldata where service_provider_id = 37 order by start_date desc;
+select * from realestate_simplebilldata where service_provider_id = 27 and real_estate_id = 2 order by start_date desc;
 
 
 use am_dev;

@@ -1,0 +1,13 @@
+{% extends "realestate/report/reportbase.html" %}
+
+{% block title %}Select Real Estate to Calculate Utility Savings{% endblock title %}
+{% block headertitle %}Select Real Estate to Calculate Utility Savings{% endblock headertitle %}
+
+{% block content %}
+<p>Enter real estate. Excel file will be available in downloads.</p>
+<form action="{% url 'realestate:utilitysavingsselect' %}" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{form.as_p}}
+    <p><input type="submit" value="Download"></p>
+</form>
+{% endblock content %}

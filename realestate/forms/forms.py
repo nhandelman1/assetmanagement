@@ -10,6 +10,11 @@ from ..models.simpleservicebilldatabase import SimpleServiceBillDataBase
 from ..models.solarbilldata import SolarBillData
 
 
+class BillReportSelectForm(forms.Form):
+    real_estate = forms.ModelChoiceField(RealEstate.objects.all())
+    year = forms.IntegerField(min_value=2000, max_value=2100)
+
+
 class ComplexServiceBillEstimateInputForm(forms.Form):
     real_estate = forms.ModelChoiceField(RealEstate.objects.all(), empty_label=None)
     service_provider = forms.ModelChoiceField(ServiceProvider.objects.all(), empty_label=None)
@@ -197,3 +202,7 @@ class UtilityDataSelectForm(forms.Form):
         self.fields["month_year"].widget.is_required = True
         self.fields["service_provider"].queryset = ServiceProvider.objects.filter(
             provider__in=utility_bill_data_model.valid_providers())
+
+
+class UtilitySavingsSelectForm(forms.Form):
+    real_estate = forms.ModelChoiceField(RealEstate.objects.all())

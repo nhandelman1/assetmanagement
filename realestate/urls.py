@@ -50,6 +50,10 @@ urlpatterns = [
     path("natgas/data/select/", views.natgas_data_select, name="natgasdataselect"),
     path("natgas/data/input/", views.natgas_data_input, name="natgasdatainput"),
 
+    path("report/", views.report_home, name="report"),
+    path("report/billreport/select/", views.bill_report_select, name="billreportselect"),
+    path("report/utilitysavings/select/", views.utility_savings_select, name="utilitysavingsselect"),
+
     path("simple/", views.simple_home, name="simple"),
     path("simple/bill/partial/", views.simple_bill_partial_select, name="simplebillpartialselect"),
     path("simple/bill/partial/input/billratio", views.simple_bill_partial_input_bill_ratio,

@@ -1,0 +1,13 @@
+{% extends "realestate/report/reportbase.html" %}
+
+{% block title %}Select Real Estate and Year to Generate Bill Report{% endblock title %}
+{% block headertitle %}Select Real Estate and Year to Generate Bill Report{% endblock headertitle %}
+
+{% block content %}
+<p>Enter real estate and year</p>
+<form action="{% url 'realestate:billreportselect' %}" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{form.as_p}}
+    <p><input type="submit" value="Select"></p>
+</form>
+{% endblock content %}

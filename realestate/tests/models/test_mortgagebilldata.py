@@ -57,12 +57,12 @@ class MortgageBillDataTests(DjangoModelTestCaseBase):
         self.equal(ebd, ebd_test)
 
     @staticmethod
-    def mortgage_bill_data_1():
+    def mortgage_bill_data_1(paid_date=None):
         return MortgageBillData.objects.get_or_create(
             real_estate=RealEstateTests.real_estate_10wl(), service_provider=ServiceProviderTests.service_provider_ms(),
             start_date=datetime.date(2022, 5, 1), end_date=datetime.date(2022, 5, 31), total_cost=Decimal("1376.12"),
             tax_rel_cost=Decimal(0), outs_prin=Decimal("323585.37"), esc_bal=Decimal(0), prin_pmt=Decimal("567.16"),
-            int_pmt=Decimal("808.96"), esc_pmt=Decimal(0), other_pmt=Decimal(0), paid_date=None,
+            int_pmt=Decimal("808.96"), esc_pmt=Decimal(0), other_pmt=Decimal(0), paid_date=paid_date,
             notes=" statement date is 2022-05-02")[0]
 
     @staticmethod
