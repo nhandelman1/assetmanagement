@@ -3,9 +3,9 @@ import datetime
 
 from ...models.mysunpowerhourlydata import MySunpowerHourlyData
 from ...models.solarbilldata import SolarBillData
-from .djangomodeltestcasebase import DjangoModelTestCaseBase
 from .test_realestate import RealEstateTests
 from .test_serviceprovider import ServiceProviderTests
+from util.djangomodeltestcasebase import DjangoModelTestCaseBase
 
 
 class SolarBillDataTests(DjangoModelTestCaseBase):

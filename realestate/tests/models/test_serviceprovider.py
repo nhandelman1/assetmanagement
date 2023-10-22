@@ -1,5 +1,5 @@
 from ...models.serviceprovider import ServiceProvider
-from .djangomodeltestcasebase import DjangoModelTestCaseBase
+from util.djangomodeltestcasebase import DjangoModelTestCaseBase
 
 
 class ServiceProviderTests(DjangoModelTestCaseBase):

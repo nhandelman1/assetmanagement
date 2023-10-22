@@ -4,7 +4,7 @@ import datetime
 from ...taxation.depreciationtaxation import DepreciationTaxation
 from ..models.test_depreciationbilldata import DepreciationBillDataTests
 from ..models.test_realpropertyvalue import RealPropertyValueTests
-from ..testcasebase import TestCaseBase
+from util.testcasebase import TestCaseBase
 
 
 class DepreciationTaxationTests(TestCaseBase):

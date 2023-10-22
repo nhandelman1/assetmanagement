@@ -4,9 +4,9 @@ import datetime
 from django.http import QueryDict
 
 from ...models.simplebilldata import SimpleBillData
-from .djangomodeltestcasebase import DjangoModelTestCaseBase
 from .test_realestate import RealEstateTests
 from .test_serviceprovider import ServiceProviderTests
+from util.djangomodeltestcasebase import DjangoModelTestCaseBase
 
 
 class SimpleBillDataTests(DjangoModelTestCaseBase):

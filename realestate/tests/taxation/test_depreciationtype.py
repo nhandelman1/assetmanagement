@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from ...models.realpropertyvalue import RealPropertyValue
 from ...taxation.depreciationtaxation import DepreciationType
-from ..testcasebase import TestCaseBase
+from util.testcasebase import TestCaseBase
 
 
 class DepreciationTypeTests(TestCaseBase):

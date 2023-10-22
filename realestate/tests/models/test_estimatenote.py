@@ -1,7 +1,7 @@
 from ...models.estimatenote import EstimateNote
-from .djangomodeltestcasebase import DjangoModelTestCaseBase
 from .test_realestate import RealEstateTests
 from .test_serviceprovider import ServiceProviderTests
+from util.djangomodeltestcasebase import DjangoModelTestCaseBase
 
 
 class EstimateNoteTests(DjangoModelTestCaseBase):

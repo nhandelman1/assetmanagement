@@ -2,8 +2,8 @@ from decimal import Decimal
 import datetime
 
 from ...models.realpropertyvalue import RealPropertyValue
-from .djangomodeltestcasebase import DjangoModelTestCaseBase
 from .test_realestate import RealEstateTests
+from util.djangomodeltestcasebase import DjangoModelTestCaseBase
 
 
 class RealPropertyValueTests(DjangoModelTestCaseBase):

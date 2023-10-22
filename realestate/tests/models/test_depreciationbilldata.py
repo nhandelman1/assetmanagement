@@ -4,10 +4,10 @@ import datetime
 from django.core.exceptions import ValidationError
 
 from ...models.depreciationbilldata import DepreciationBillData
-from .djangomodeltestcasebase import DjangoModelTestCaseBase
 from .test_realestate import RealEstateTests
 from .test_realpropertyvalue import RealPropertyValueTests
 from .test_serviceprovider import ServiceProviderTests
+from util.djangomodeltestcasebase import DjangoModelTestCaseBase
 
 
 class DepreciationBillDataTests(DjangoModelTestCaseBase):

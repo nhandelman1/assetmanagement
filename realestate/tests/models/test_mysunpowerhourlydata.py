@@ -2,7 +2,7 @@ from decimal import Decimal
 import datetime
 
 from ...models.mysunpowerhourlydata import MySunpowerHourlyData
-from .djangomodeltestcasebase import DjangoModelTestCaseBase
+from util.djangomodeltestcasebase import DjangoModelTestCaseBase
 
 
 class MySunpowerHourlyDataTests(DjangoModelTestCaseBase):

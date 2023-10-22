@@ -2,9 +2,9 @@ from decimal import Decimal
 import datetime
 
 from ...models.electricbilldata import ElectricBillData
-from .djangomodeltestcasebase import DjangoModelTestCaseBase
 from .test_realestate import RealEstateTests
 from .test_serviceprovider import ServiceProviderTests
+from util.djangomodeltestcasebase import DjangoModelTestCaseBase
 
 
 class ElectricBillDataTests(DjangoModelTestCaseBase):

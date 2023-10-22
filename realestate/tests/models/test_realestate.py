@@ -1,5 +1,5 @@
 from ...models.realestate import RealEstate
-from .djangomodeltestcasebase import DjangoModelTestCaseBase
+from util.djangomodeltestcasebase import DjangoModelTestCaseBase
 
 
 class RealEstateTests(DjangoModelTestCaseBase):
