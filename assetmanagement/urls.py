@@ -23,6 +23,8 @@ from django.views.generic.base import TemplateView
 
 urlpatterns = [
     path("realestate/", include("realestate.urls")),
+    path("investing/", include("investing.urls")),
+    path('admin/doc/', include('django.contrib.admindocs.urls')),  # must go before admin/
     path("admin/", admin.site.urls),
     path("accounts/", include("django.contrib.auth.urls")),
     path('', TemplateView.as_view(template_name='home.html'), name='home')

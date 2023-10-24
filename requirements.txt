@@ -4,3 +4,4 @@ colorama~=0.4.6
 Django~=4.2.5
 tablib~=3.5.0
 numpy~=1.25.2
+requests~=2.31.0

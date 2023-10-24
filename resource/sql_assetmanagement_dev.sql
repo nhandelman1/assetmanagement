@@ -4,6 +4,8 @@ SELECT @@sql_mode;
 SET SQL_SAFE_UPDATES = 1;
 SET FOREIGN_KEY_CHECKS = 1;
 
+select * from investing_newssentiment_tickers;
+
 select * from realestate_natgasdata;
 select * from realestate_natgasbilldata where real_estate_id = 1 order by start_date desc;
 select * from realestate_electricbilldata order by start_date desc;

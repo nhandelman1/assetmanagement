@@ -1,0 +1,3 @@
+from .dataprovider.test_alphavantage import AlphaVantageTests
+from .models.test_newssentiment import NewsSentimentTests
+from .models.test_securitymaster import SecurityMasterTests

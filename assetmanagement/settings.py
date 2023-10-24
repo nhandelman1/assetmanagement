@@ -34,7 +34,9 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'realestate.apps.RealestateConfig',
+    'investing.apps.InvestingConfig',
     'django.contrib.admin',
+    'django.contrib.admindocs',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -117,6 +119,32 @@ USE_I18N = True
 
 USE_TZ = True
 
+
+# Logging
+# https://docs.djangoproject.com/en/4.2/topics/logging/
+LOGGING = {
+    "version": 1,  # the dictConfig format version
+    "disable_existing_loggers": False,  # retain the default loggers
+    "formatters": {
+        "standard": {
+            "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+        },
+    },
+    "handlers": {
+        "file": {
+            "backupCount": 100,
+            "class": "logging.handlers.TimedRotatingFileHandler",
+            "filename": "logging/log.log",
+            "formatter": "standard",
+            "when": "midnight",
+        },
+    },
+    "loggers": {
+        "": {
+            "handlers": ["file"],
+        },
+    },
+}
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
