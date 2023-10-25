@@ -192,12 +192,26 @@ class SecurityMaster(models.Model):
     def validate_my_id(my_id):
         SecurityMaster.validate_my_id_partial(my_id)
 
-    my_id = models.CharField(max_length=10, unique=True, validators=[validate_my_id])
+    my_id = models.CharField(max_length=10, unique=True, validators=[validate_my_id], default="NS_0000000")
     ticker = models.CharField(max_length=30, unique=True)
     asset_class = models.CharField(max_length=20, choices=AssetClass.choices)
     asset_subclass = models.CharField(max_length=20, choices=AssetSubClass.choices)
 
     objects = SecurityMasterDataManager()
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        """ __str__ override
+
+        Format:
+            self.ticker, self.asset_class, self.asset_subclass
+
+        Returns:
+            str: as described by Format
+        """
+        return self.ticker + ", " + self.asset_class + ", " + self.asset_subclass
 
     def clean_fields(self, exclude=None):
         super().clean_fields(exclude=exclude)
