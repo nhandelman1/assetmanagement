@@ -22,9 +22,10 @@ class InvestmentAccount(models.Model):
     broker = models.CharField(max_length=30, choices=Broker.choices)
     account_id = models.CharField(max_length=20)
     account_name = models.CharField(max_length=30)
+    taxable = models.BooleanField()
 
     def __repr__(self):
-        return self.__str__()
+        return self.__str__() + ", " + str(self.taxable)
 
     def __str__(self):
         """ __str__ override

@@ -1,6 +1,30 @@
 from django import forms
 
+from ..models.position import Position
 from ..models.securitymaster import SecurityMaster
+
+
+class PositionAdminForm(forms.ModelForm):
+    class Meta:
+        model = Position
+        help_texts = {"market_value": "Value will be calculated if left blank.",
+                      "cost_basis_total": "Value will be calculated if left blank."}
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['market_value'].required = False
+        self.fields['cost_basis_total'].required = False
+
+    def clean(self):
+        """ Override clean to calculate market_value and cost_basis_total if not set """
+        cd = super().clean()  # super returns self.cleaned_data
+        for total, price in (("market_value", "close_price"), ("cost_basis_total", "cost_basis_avg")):
+            if cd[total] is None:
+                if all([x in cd for x in ["quantity", price]]):
+                    cd[total] = round(cd["quantity"] * cd[price], self.fields[total].decimal_places)
+
+        return self.cleaned_data
 
 
 class SecurityMasterAdminForm(forms.ModelForm):
