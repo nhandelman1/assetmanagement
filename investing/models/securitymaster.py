@@ -60,6 +60,17 @@ class SecurityMasterDataManager(models.Manager):
         security_master.save()
         return security_master
 
+    def ticker_to_security_dict(self, ticker_list):
+        """ Create dict of ticker to security with that id
+
+        Args:
+            ticker_list (list[str]):
+
+        Returns:
+            dict: ticker (keys) to security (values)
+        """
+        return {sec.ticker: sec for sec in SecurityMaster.objects.filter(ticker__in=ticker_list)}
+
 
 class SecurityMaster(models.Model):
     """ Security Master Model
@@ -70,6 +81,8 @@ class SecurityMaster(models.Model):
         ticker (str): common ticker for security
         asset_class (SecurityMaster.AssetClass):
         asset_subclass (SecurityMaster.AssetSubClass):
+        has_fidelity_lots (boolean): True if broker FIDELITY breaks a Position in this security into lots. False if
+            it does not. Default True
     """
     class AssetClass(models.TextChoices):
         """ Major class of this investment security.
@@ -80,6 +93,7 @@ class SecurityMaster(models.Model):
         CRYPTO = "CRYPTO", gettext_lazy("CRYPTO")
         EQUITY = "EQUITY", gettext_lazy("EQUITY")
         FX = "FX", gettext_lazy("FX")
+        MUTUAL_FUND = "MUTUAL_FUND", gettext_lazy("MUTUAL_FUND")
         NOT_SET = "NOT_SET", gettext_lazy("NOT_SET")
         OPTION = "OPTION", gettext_lazy("OPTION")
 
@@ -107,6 +121,8 @@ class SecurityMaster(models.Model):
                 return "EQ_"
             elif asset_class == AssetClass.FX:
                 return "FX_"
+            elif asset_class == AssetClass.MUTUAL_FUND:
+                return "MF_"
             elif asset_class == AssetClass.NOT_SET:
                 return "NS_"
             elif asset_class == AssetClass.OPTION:
@@ -135,6 +151,8 @@ class SecurityMaster(models.Model):
                 return AssetSubClass.COMMON_STOCK, AssetSubClass.ETF
             elif asset_class == AssetClass.FX:
                 return AssetSubClass.FX,
+            elif asset_class == AssetClass.MUTUAL_FUND:
+                return AssetSubClass.MONEY_MARKET,
             elif asset_class == AssetClass.NOT_SET:
                 return AssetSubClass.NOT_SET,
             elif asset_class == AssetClass.OPTION:
@@ -145,9 +163,12 @@ class SecurityMaster(models.Model):
     class AssetSubClass(models.TextChoices):
         """ Minor class of this investment security.
         bonds: corporate bond, government bond, municipal bond
+        crypto: crypto
         equities: common stock, etf
-        options: equity option, index option
+        fx: fx
+        mutual fund: money market
         not_set is not an actual subclass. it indicates that this security needs to have its asset subclass set
+        options: equity option, index option
         """
         COMMON_STOCK = "COMMON_STOCK", gettext_lazy("COMMON_STOCK")
         CORP_BOND = "CORP_BOND", gettext_lazy("CORP_BOND")
@@ -157,6 +178,7 @@ class SecurityMaster(models.Model):
         FX = "FX", gettext_lazy("FX")
         GOV_BOND = "GOV_BOND", gettext_lazy("GOV_BOND")
         INDEX_OPTION = "INDEX_OPTION", gettext_lazy("INDEX_OPTION")
+        MONEY_MARKET = "MONEY_MARKET", gettext_lazy("MONEY_MARKET")
         MUNI_BOND = "MUNI_BOND", gettext_lazy("MUNI_BOND")
         NOT_SET = "NOT_SET", gettext_lazy("NOT_SET")
 
@@ -181,6 +203,8 @@ class SecurityMaster(models.Model):
                 return AssetClass.EQUITY
             elif asset_subclass in (AssetSubClass.FX,):
                 return AssetClass.FX
+            elif asset_subclass in (AssetSubClass.MONEY_MARKET,):
+                return AssetClass.MUTUAL_FUND
             elif asset_subclass in (AssetSubClass.NOT_SET,):
                 return AssetClass.NOT_SET
             elif asset_subclass in (AssetSubClass.EQUITY_OPTION, AssetSubClass.INDEX_OPTION):
@@ -196,6 +220,7 @@ class SecurityMaster(models.Model):
     ticker = models.CharField(max_length=30, unique=True)
     asset_class = models.CharField(max_length=20, choices=AssetClass.choices)
     asset_subclass = models.CharField(max_length=20, choices=AssetSubClass.choices)
+    has_fidelity_lots = models.BooleanField(default=True)
 
     objects = SecurityMasterDataManager()
 

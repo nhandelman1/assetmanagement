@@ -19,7 +19,7 @@ class PositionAdminForm(forms.ModelForm):
     def clean(self):
         """ Override clean to calculate market_value and cost_basis_total if not set """
         cd = super().clean()  # super returns self.cleaned_data
-        for total, price in (("market_value", "close_price"), ("cost_basis_total", "cost_basis_avg")):
+        for total, price in (("market_value", "close_price"), ("cost_basis_total", "cost_basis_price")):
             if cd[total] is None:
                 if all([x in cd for x in ["quantity", price]]):
                     cd[total] = round(cd["quantity"] * cd[price], self.fields[total].decimal_places)

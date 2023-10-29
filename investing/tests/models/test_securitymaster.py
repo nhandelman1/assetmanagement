@@ -128,27 +128,35 @@ class SecurityMasterTests(DjangoModelTestCaseBase):
     def security_master_aapl(create=True):
         sm = (SecurityMaster.objects.get_or_create if create else SecurityMaster)(
             my_id="EQ_0000001", ticker="AAPL", asset_class=AssetClass.EQUITY,
-            asset_subclass=AssetSubClass.COMMON_STOCK)
+            asset_subclass=AssetSubClass.COMMON_STOCK, has_fidelity_lots=True)
         return sm[0] if create else sm
 
     @staticmethod
     def security_master_msft(create=True):
         sm = (SecurityMaster.objects.get_or_create if create else SecurityMaster)(
             my_id="EQ_1000001", ticker="MSFT", asset_class=AssetClass.EQUITY,
-            asset_subclass=AssetSubClass.COMMON_STOCK)
+            asset_subclass=AssetSubClass.COMMON_STOCK, has_fidelity_lots=True)
         return sm[0] if create else sm
 
     @staticmethod
     def security_master_nvda():
         return SecurityMaster(my_id="NS_0000001", ticker="NVDA", asset_class=AssetClass.NOT_SET,
-                              asset_subclass=AssetSubClass.NOT_SET)
+                              asset_subclass=AssetSubClass.NOT_SET, has_fidelity_lots=True)
 
     @staticmethod
     def security_master_btc():
         return SecurityMaster.objects.get_or_create(
-            my_id="CR_0000001", ticker="BTC", asset_class=AssetClass.CRYPTO, asset_subclass=AssetSubClass.CRYPTO)[0]
+            my_id="CR_0000001", ticker="BTC", asset_class=AssetClass.CRYPTO, asset_subclass=AssetSubClass.CRYPTO,
+            has_fidelity_lots=True)[0]
 
     @staticmethod
     def security_master_cad():
         return SecurityMaster.objects.get_or_create(
-            my_id="FX_0000001", ticker="CAD", asset_class=AssetClass.FX, asset_subclass=AssetSubClass.FX)[0]
+            my_id="FX_0000001", ticker="CAD", asset_class=AssetClass.FX, asset_subclass=AssetSubClass.FX,
+            has_fidelity_lots=False)[0]
+
+    @staticmethod
+    def security_master_spaxx():
+        return SecurityMaster.objects.get_or_create(
+            my_id="MF_0000001", ticker="SPAXX", asset_class=AssetClass.MUTUAL_FUND,
+            asset_subclass=AssetSubClass.MONEY_MARKET, has_fidelity_lots=False)[0]

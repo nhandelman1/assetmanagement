@@ -6,10 +6,14 @@ from ..forms.modelforms import PositionAdminForm
 class PositionAdmin(admin.ModelAdmin):
     form = PositionAdminForm
 
+    fieldsets = [
+        ("Purchase Information", {"fields": ["investment_account", "security", "quantity", "purchase_date",
+                                             "cost_basis_price", "cost_basis_total"]}),
+        ("End of Day Information", {"fields": ["close_date", "close_price", "market_value"]})]
     list_display = ["get_broker", "get_account_name", "close_date", "get_security_ticker", "get_security_asset_class",
-                    "quantity", "close_price", "market_value", "cost_basis_avg", "cost_basis_total"]
-    list_filter = ["investment_account__broker", "investment_account__account_name", "close_date"]
-    search_fields = ["close_date", "security__ticker"]
+                    "quantity", "close_price", "market_value", "purchase_date", "cost_basis_price", "cost_basis_total"]
+    list_filter = ["investment_account__broker", "investment_account__account_name", "close_date", "purchase_date"]
+    search_fields = ["security__ticker", "close_date", "purchase_date"]
 
     @admin.display(ordering='investment_account__broker', description='Account_Broker')
     def get_broker(self, position):
