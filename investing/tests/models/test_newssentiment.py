@@ -73,7 +73,7 @@ class NewsSentimentTests(DjangoModelTestCaseBase):
             ts.clean_fields()
 
     def test_ticker_sentiment_alphavantage_ticker_sentiment_constructor(self):
-        SecurityMasterTests.security_master_btc()
+        SecurityMasterTests.sm_btc()
 
         # test ValidationError
         ts_btc = AlphaVantageTests.ticker_sentiment_btc_obj()
@@ -96,8 +96,8 @@ class NewsSentimentTests(DjangoModelTestCaseBase):
             ts.clean_fields()
 
     def test_news_sentiment_alphavantage_news_sentiment_constructor(self):
-        SecurityMasterTests.security_master_btc()
-        SecurityMasterTests.security_master_cad()
+        SecurityMasterTests.sm_btc()
+        SecurityMasterTests.sm_cad()
         av_ns = AlphaVantageTests.news_sentiment_1_obj()
         ns = NewsSentiment.objects.alphavantage_news_sentiment_constructor(av_ns)
 
@@ -142,26 +142,26 @@ class NewsSentimentTests(DjangoModelTestCaseBase):
     @staticmethod
     def ticker_sentiment_aapl():
         return TickerSentiment.objects.get_or_create(
-            security_master=SecurityMasterTests.security_master_aapl(), ticker="AAPL", relevance_score=Decimal("0.5"),
+            security_master=SecurityMasterTests.sm_aapl(), ticker="AAPL", relevance_score=Decimal("0.5"),
             ticker_sentiment_score=Decimal("1"), ticker_sentiment_label=TickerSentimentLabel.BULLISH)[0]
 
     @staticmethod
     def ticker_sentiment_msft():
         return TickerSentiment.objects.get_or_create(
-            security_master=SecurityMasterTests.security_master_msft(), ticker="MSFT", relevance_score=Decimal("0.99"),
+            security_master=SecurityMasterTests.sm_msft(), ticker="MSFT", relevance_score=Decimal("0.99"),
             ticker_sentiment_score=Decimal("-0.4"), ticker_sentiment_label=TickerSentimentLabel.BEARISH)[0]
 
     @staticmethod
     def ticker_sentiment_btc(create=True):
         ts = (TickerSentiment.objects.get_or_create if create else TickerSentiment)(
-            security_master=SecurityMasterTests.security_master_btc(), ticker="BTC",relevance_score=Decimal("0.694639"),
+            security_master=SecurityMasterTests.sm_btc(), ticker="BTC",relevance_score=Decimal("0.694639"),
             ticker_sentiment_score=Decimal("-0.498463"), ticker_sentiment_label=TickerSentimentLabel.BEARISH)
         return ts[0] if create else ts
 
     @staticmethod
     def ticker_sentiment_cad(create=True):
         ts = (TickerSentiment.objects.get_or_create if create else TickerSentiment)(
-            security_master=SecurityMasterTests.security_master_cad(), ticker="CAD", relevance_score=Decimal("1.0"),
+            security_master=SecurityMasterTests.sm_cad(), ticker="CAD", relevance_score=Decimal("1.0"),
             ticker_sentiment_score=Decimal("1"),  ticker_sentiment_label=TickerSentimentLabel.BULLISH)
         return ts[0] if create else ts
 

@@ -38,15 +38,17 @@ class PositionTests(DjangoModelTestCaseBase):
             with self.assertRaises(ValueError):
                 Position.load_positions_from_file(Broker.FIDELITY, "test positions no close date.csv")
 
-        InvestmentAccountTests.investment_account_fidelity_individual()
-        InvestmentAccountTests.investment_account_fidelity_roth()
+        InvestmentAccountTests.inv_acc_fidelity_individual()
+        InvestmentAccountTests.inv_acc_fidelity_roth()
         aapl921_pos = PositionTests.position_fidelity_roth_aapl_lot921()
         aapl13_pos = PositionTests.position_fidelity_roth_aapl_lot13()
         msft21_pos = PositionTests.position_fidelity_roth_msft_lot21()
         msft1225_pos = PositionTests.position_fidelity_roth_msft_lot1225()
         msft19_pos = PositionTests.position_fidelity_roth_msft_lot19()
+
+        pos_list, sec_ns_list = Position.load_positions_from_file(Broker.FIDELITY, "test positions.csv")
+        # put this line after load_positions_from_file() so the create default security function is used for SPAXX
         spaxx_pos = PositionTests.position_fidelity_individual_spaxx()
-        pos_list = Position.load_positions_from_file(Broker.FIDELITY, "test positions.csv")
 
         with self.subTest():
             self.equal(pos_list[0], aapl921_pos)
@@ -61,19 +63,23 @@ class PositionTests(DjangoModelTestCaseBase):
         with self.subTest():
             self.equal(pos_list[5], spaxx_pos)
 
+        with self.subTest():
+            self.assertEqual(len(sec_ns_list), 1)
+            SecurityMasterTests().equal(sec_ns_list[0], SecurityMasterTests.sm_spaxx())
+
     @staticmethod
     def position_fidelity_individual_spaxx():
         return Position(
-            investment_account=InvestmentAccountTests.investment_account_fidelity_individual(),
-            close_date=datetime.date(2023, 10, 27), security=SecurityMasterTests.security_master_spaxx(),
+            investment_account=InvestmentAccountTests.inv_acc_fidelity_individual(),
+            close_date=datetime.date(2023, 10, 27), security=SecurityMasterTests.sm_spaxx(),
             quantity=Decimal("3423.5300"), close_price=Decimal("1.00"), market_value=Decimal("3423.5300"),
             purchase_date=None, cost_basis_price=Decimal("1.00"), cost_basis_total=Decimal("3423.5300"))
 
     @staticmethod
     def position_fidelity_roth_msft_lot21():
         return Position(
-            investment_account=InvestmentAccountTests.investment_account_fidelity_roth(),
-            close_date=datetime.date(2023, 10, 27), security=SecurityMasterTests.security_master_msft(),
+            investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(),
+            close_date=datetime.date(2023, 10, 27), security=SecurityMasterTests.sm_msft(),
             quantity=Decimal("21.0000"), close_price=Decimal("35.97"), market_value=Decimal("755.37"),
             purchase_date=datetime.date(2023, 2, 21), cost_basis_price=Decimal("36.29"),
             cost_basis_total=Decimal("762.09"))
@@ -81,8 +87,8 @@ class PositionTests(DjangoModelTestCaseBase):
     @staticmethod
     def position_fidelity_roth_msft_lot19():
         return Position(
-            investment_account=InvestmentAccountTests.investment_account_fidelity_roth(),
-            close_date=datetime.date(2023, 10, 27), security=SecurityMasterTests.security_master_msft(),
+            investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(),
+            close_date=datetime.date(2023, 10, 27), security=SecurityMasterTests.sm_msft(),
             quantity=Decimal("19.0000"), close_price=Decimal("35.97"), market_value=Decimal("683.43"),
             purchase_date=datetime.date(2022, 9, 20), cost_basis_price=Decimal("35.82"),
             cost_basis_total=Decimal("680.58"))
@@ -90,8 +96,8 @@ class PositionTests(DjangoModelTestCaseBase):
     @staticmethod
     def position_fidelity_roth_msft_lot1225():
         return Position(
-            investment_account=InvestmentAccountTests.investment_account_fidelity_roth(),
-            close_date=datetime.date(2023, 10, 27), security=SecurityMasterTests.security_master_msft(),
+            investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(),
+            close_date=datetime.date(2023, 10, 27), security=SecurityMasterTests.sm_msft(),
             quantity=Decimal("1225.0000"), close_price=Decimal("35.97"), market_value=Decimal("44063.25"),
             purchase_date=datetime.date(2022, 9, 12), cost_basis_price=Decimal("43.47"),
             cost_basis_total=Decimal("53250.75"))
@@ -99,8 +105,8 @@ class PositionTests(DjangoModelTestCaseBase):
     @staticmethod
     def position_fidelity_roth_aapl_lot13():
         return Position(
-            investment_account=InvestmentAccountTests.investment_account_fidelity_roth(),
-            close_date=datetime.date(2023, 10, 27), security=SecurityMasterTests.security_master_aapl(),
+            investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(),
+            close_date=datetime.date(2023, 10, 27), security=SecurityMasterTests.sm_aapl(),
             quantity=Decimal("13.0000"), close_price=Decimal("35.97"), market_value=Decimal("467.61"),
             purchase_date=datetime.date(2022, 9, 20), cost_basis_price=Decimal("35.92"),
             cost_basis_total=Decimal("466.96"))
@@ -108,8 +114,8 @@ class PositionTests(DjangoModelTestCaseBase):
     @staticmethod
     def position_fidelity_roth_aapl_lot921():
         return Position(
-            investment_account=InvestmentAccountTests.investment_account_fidelity_roth(),
-            close_date=datetime.date(2023, 10, 27), security=SecurityMasterTests.security_master_aapl(),
+            investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(),
+            close_date=datetime.date(2023, 10, 27), security=SecurityMasterTests.sm_aapl(),
             quantity=Decimal("921.0000"), close_price=Decimal("35.97"), market_value=Decimal("33128.37"),
             purchase_date=datetime.date(2022, 9, 12), cost_basis_price=Decimal("43.47"),
             cost_basis_total=Decimal("40035.87"))

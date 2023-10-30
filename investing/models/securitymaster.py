@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy
 
 class SecurityMasterDataManager(models.Manager):
 
-    def create_default(self, ticker):
+    def create_default(self, ticker, has_fidelity_lots=True):
         """ Create default SecurityMaster object with provided ticker
 
         Created object is set with the next available AssetClass.NOT_SET id, ticker, AssetClass.NOT_SET,
@@ -14,14 +14,16 @@ class SecurityMasterDataManager(models.Manager):
 
         Args:
             ticker (str): security ticker
+            has_fidelity_lots (boolean): See SecurityMaster.has_fidelity_lots. Default True
 
         Returns:
             SecurityMaster: created object as described
         """
-        return SecurityMaster.objects.create(my_id=SecurityMaster.generate_my_id(AssetClass.NOT_SET), ticker=ticker,
-                                             asset_class=AssetClass.NOT_SET, asset_subclass=AssetSubClass.NOT_SET)
+        return SecurityMaster.objects.create(
+            my_id=SecurityMaster.generate_my_id(AssetClass.NOT_SET), ticker=ticker, asset_class=AssetClass.NOT_SET,
+            asset_subclass=AssetSubClass.NOT_SET, has_fidelity_lots=has_fidelity_lots)
 
-    def get_or_create_default(self, ticker):
+    def get_or_create_default(self, ticker, has_fidelity_lots=True):
         """ Get SecurityMaster object for ticker or create default
 
         This function is intended for use in an automated process where a ticker may or may not match an existing
@@ -30,6 +32,7 @@ class SecurityMasterDataManager(models.Manager):
 
         Args:
             ticker (str): security ticker
+            has_fidelity_lots (boolean): See create_default(). Default True
 
         Returns:
             SecurityMaster: existing object with matching ticker or a new default object with ticker
@@ -37,7 +40,7 @@ class SecurityMasterDataManager(models.Manager):
         try:
             return SecurityMaster.objects.get(ticker=ticker)
         except ObjectDoesNotExist:
-            return self.create_default(ticker)
+            return self.create_default(ticker, has_fidelity_lots=has_fidelity_lots)
 
     def convert_asset_class(self, security_master, asset_class, asset_subclass):
         """ Convert existing SecurityMaster object to another AssetClass or AssetSubClass

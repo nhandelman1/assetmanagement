@@ -37,19 +37,19 @@ class SecurityMasterTests(DjangoModelTestCaseBase):
 
     def test_create_default(self):
         sm = SecurityMaster.objects.create_default("NVDA")
-        self.equal(sm, SecurityMasterTests.security_master_nvda())
+        self.equal(sm, SecurityMasterTests.sm_nvda())
 
     def test_get_or_create_default(self):
-        # test get existing object
-        self.equal(SecurityMasterTests.security_master_aapl(), SecurityMaster.objects.get_or_create_default("AAPL"))
+        # test get existing object. create object first then call get_or_create_default
+        self.equal(SecurityMasterTests.sm_aapl(), SecurityMaster.objects.get_or_create_default("AAPL"))
 
-        # test create default object
-        self.equal(SecurityMasterTests.security_master_nvda(), SecurityMaster.objects.get_or_create_default("NVDA"))
+        # test create default object. create default object then test equality to ensure it is a default object
+        self.equal(SecurityMaster.objects.get_or_create_default("NVDA"), SecurityMasterTests.sm_nvda())
 
     def test_convert_asset_class(self):
         sm_new = SecurityMaster.objects.convert_asset_class(
-            SecurityMasterTests.security_master_nvda(), AssetClass.EQUITY, AssetSubClass.COMMON_STOCK)
-        sm_test = SecurityMasterTests.security_master_nvda()
+            SecurityMasterTests.sm_nvda(), AssetClass.EQUITY, AssetSubClass.COMMON_STOCK)
+        sm_test = SecurityMasterTests.sm_nvda()
         sm_test.my_id = "EQ_0000001"
         sm_test.asset_class = AssetClass.EQUITY
         sm_test.asset_subclass = AssetSubClass.COMMON_STOCK
@@ -57,7 +57,7 @@ class SecurityMasterTests(DjangoModelTestCaseBase):
 
     def test_my_id(self):
         # no validation error
-        sm_create = SecurityMasterTests.security_master_aapl()
+        sm_create = SecurityMasterTests.sm_aapl()
 
         # validation error - length of my_id not equal 10
         sm_create.my_id = "EQ_000001"
@@ -100,16 +100,16 @@ class SecurityMasterTests(DjangoModelTestCaseBase):
         self.assertEqual(SecurityMaster.generate_my_id(AssetClass.EQUITY), "EQ_0000001")
 
         # one equity in security master
-        SecurityMasterTests.security_master_aapl()
+        SecurityMasterTests.sm_aapl()
         self.assertEqual(SecurityMaster.generate_my_id(AssetClass.EQUITY), "EQ_0000002")
 
         # two equities in security master
-        SecurityMasterTests.security_master_msft()
+        SecurityMasterTests.sm_msft()
         self.assertEqual(SecurityMaster.generate_my_id(AssetClass.EQUITY), "EQ_1000002")
 
     def test_save_clean(self):
         # no validation error
-        sm = SecurityMasterTests.security_master_aapl()
+        sm = SecurityMasterTests.sm_aapl()
 
         # should raise ValidationError
         with self.assertRaises(ValidationError):
@@ -117,7 +117,7 @@ class SecurityMasterTests(DjangoModelTestCaseBase):
             sm.save()
 
         # no validation error
-        sm = SecurityMasterTests.security_master_aapl(create=False)
+        sm = SecurityMasterTests.sm_aapl(create=False)
 
         # should raise ValidationError
         with self.assertRaises(ValidationError):
@@ -125,38 +125,52 @@ class SecurityMasterTests(DjangoModelTestCaseBase):
             sm.clean_fields()
 
     @staticmethod
-    def security_master_aapl(create=True):
+    def sm_aapl(create=True):
         sm = (SecurityMaster.objects.get_or_create if create else SecurityMaster)(
             my_id="EQ_0000001", ticker="AAPL", asset_class=AssetClass.EQUITY,
             asset_subclass=AssetSubClass.COMMON_STOCK, has_fidelity_lots=True)
         return sm[0] if create else sm
 
     @staticmethod
-    def security_master_msft(create=True):
+    def sm_aapl_call(create=True):
+        sm = (SecurityMaster.objects.get_or_create if create else SecurityMaster)(
+            my_id="OP_0000001", ticker="AAPL220916C41.5", asset_class=AssetClass.OPTION,
+            asset_subclass=AssetSubClass.EQUITY_OPTION, has_fidelity_lots=True)
+        return sm[0] if create else sm
+
+    @staticmethod
+    def sm_aapl_put(create=True):
+        sm = (SecurityMaster.objects.get_or_create if create else SecurityMaster)(
+            my_id="OP_0000002", ticker="AAPL220916P37.5", asset_class=AssetClass.OPTION,
+            asset_subclass=AssetSubClass.EQUITY_OPTION, has_fidelity_lots=True)
+        return sm[0] if create else sm
+
+    @staticmethod
+    def sm_btc():
+        return SecurityMaster.objects.get_or_create(
+            my_id="CR_0000001", ticker="BTC", asset_class=AssetClass.CRYPTO, asset_subclass=AssetSubClass.CRYPTO,
+            has_fidelity_lots=True)[0]
+
+    @staticmethod
+    def sm_cad():
+        return SecurityMaster.objects.get_or_create(
+            my_id="FX_0000001", ticker="CAD", asset_class=AssetClass.FX, asset_subclass=AssetSubClass.FX,
+            has_fidelity_lots=False)[0]
+
+    @staticmethod
+    def sm_msft(create=True):
         sm = (SecurityMaster.objects.get_or_create if create else SecurityMaster)(
             my_id="EQ_1000001", ticker="MSFT", asset_class=AssetClass.EQUITY,
             asset_subclass=AssetSubClass.COMMON_STOCK, has_fidelity_lots=True)
         return sm[0] if create else sm
 
     @staticmethod
-    def security_master_nvda():
+    def sm_nvda():
         return SecurityMaster(my_id="NS_0000001", ticker="NVDA", asset_class=AssetClass.NOT_SET,
                               asset_subclass=AssetSubClass.NOT_SET, has_fidelity_lots=True)
 
     @staticmethod
-    def security_master_btc():
+    def sm_spaxx(has_fidelity_lots=False):
         return SecurityMaster.objects.get_or_create(
-            my_id="CR_0000001", ticker="BTC", asset_class=AssetClass.CRYPTO, asset_subclass=AssetSubClass.CRYPTO,
-            has_fidelity_lots=True)[0]
-
-    @staticmethod
-    def security_master_cad():
-        return SecurityMaster.objects.get_or_create(
-            my_id="FX_0000001", ticker="CAD", asset_class=AssetClass.FX, asset_subclass=AssetSubClass.FX,
-            has_fidelity_lots=False)[0]
-
-    @staticmethod
-    def security_master_spaxx():
-        return SecurityMaster.objects.get_or_create(
-            my_id="MF_0000001", ticker="SPAXX", asset_class=AssetClass.MUTUAL_FUND,
-            asset_subclass=AssetSubClass.MONEY_MARKET, has_fidelity_lots=False)[0]
+            my_id="NS_0000001", ticker="SPAXX", asset_class=AssetClass.NOT_SET,
+            asset_subclass=AssetSubClass.NOT_SET, has_fidelity_lots=has_fidelity_lots)[0]

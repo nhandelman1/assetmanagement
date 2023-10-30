@@ -40,7 +40,8 @@ class Position(models.Model):
     cost_basis_total = models.DecimalField(max_digits=12, decimal_places=2)
 
     def __repr__(self):
-        return repr(self.investment_account) + ", " + repr(self.security) + ", " + str(self.quantity)
+        return repr(self.investment_account) + ", " + repr(self.security) + ", " + repr(self.quantity) + ", " + \
+            repr(self.purchase_date)
 
     def __str__(self):
         return self.investment_account.broker + ", " + self.investment_account.account_name + ", " + \
@@ -74,7 +75,8 @@ class Position(models.Model):
                 File object. file is expected to be csv
 
         Returns:
-            list[Position]: each Position instance is saved to the database
+            tuple[list[Position], list[SecurityMaster]]: each Position instance is saved to the database,
+                SecurityMaster list contains securities that did not exist but were created and set to default
 
         Raises:
             DatabaseError: if atomic transaction to save all positions fails
@@ -82,7 +84,6 @@ class Position(models.Model):
             ValidationError: if a position that should have lots does not have lots
             ValueError: if close date not found in 'Close Date' column
         """
-
         dp_dict = {}
         for f in Position._meta.get_fields():
             if f.name == "quantity":
@@ -152,7 +153,7 @@ class Position(models.Model):
         acc_dict = InvestmentAccount.objects.account_id_to_account_dict(
             df["Account ID"].drop_duplicates().tolist(), Broker.FIDELITY)
         sec_dict = SecurityMaster.objects.ticker_to_security_dict(df["Ticker"].drop_duplicates().tolist())
-
+        sec_ns_list = []
         pos_list = []
         for ind, row in df.iterrows():
             try:
@@ -162,7 +163,9 @@ class Position(models.Model):
 
             security = sec_dict.get(row["Ticker"], None)
             if security is None:
-                security = SecurityMaster.objects.get_or_create_default(row["Symbol"])
+                security = SecurityMaster.objects.get_or_create_default(
+                    row["Ticker"], has_fidelity_lots=(row["Purchase Date"] is not None))
+                sec_ns_list.append(security)
                 sec_dict[row["Ticker"]] = security
 
             pos_list.append(
@@ -175,7 +178,7 @@ class Position(models.Model):
             for pos in pos_list:
                 pos.save()
 
-        return pos_list
+        return pos_list, sec_ns_list
 
     @classmethod
     def load_positions_from_file(cls, broker, file):
@@ -189,15 +192,16 @@ class Position(models.Model):
                 File object.
 
         Returns:
-            list[Position]:
+            tuple[list[Position], list[SecurityMaster]]: each Position instance is saved to the database,
+                SecurityMaster list contains securities that did not exist but were created and set to default
 
         Raises:
-            NotImplementedError: if broker not set in this function, if a function called from this function returns a
+            DatabaseError: if a function called from this function raises a DatabaseError
+            NotImplementedError: if broker not set in this function, if a function called from this function raises a
                 NotImplementedError
-            ObjectDoesNotExist: if a function called from this function returns a ObjectDoesNotExist
-            ValidationError: if a function called from this function returns a ValidationError
-            ValueError: if a function called from this function returns a ValueError
-
+            ObjectDoesNotExist: if a function called from this function raises a ObjectDoesNotExist
+            ValidationError: if a function called from this function raises a ValidationError
+            ValueError: if a function called from this function raises a ValueError
 
         See Also:
             load_positions_from_fidelity_file()
