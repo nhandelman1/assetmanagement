@@ -1,7 +1,7 @@
 from decimal import Decimal
 import datetime
 
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
 from ...models.investmentaccount import Broker
 from ...models.transaction import ActionType, Transaction, TransactionType
@@ -50,6 +50,21 @@ class TransactionTests(DjangoModelTestCaseBase):
             trans.clean_fields()
 
     def test_load_transactions_from_fidelity_file(self):
+        with self.subTest():
+            # accounts not created
+            with self.assertRaises(ObjectDoesNotExist):
+                Transaction.load_transactions_from_file(Broker.FIDELITY, "test transactions.csv")
+
+        with self.subTest():
+            # DISTRIBUTION description but quantity is 0
+            with self.assertRaises(ValueError):
+                Transaction.load_transactions_from_file(Broker.FIDELITY, "test transactions distribution fail.csv")
+
+        with self.subTest():
+            # DISTRIBUTION description but quantity is 0
+            with self.assertRaises(ValueError):
+                Transaction.load_transactions_from_file(Broker.FIDELITY, "test transactions description fail.csv")
+
         InvestmentAccountTests.inv_acc_fidelity_individual()
         InvestmentAccountTests.inv_acc_fidelity_roth()
         SecurityMasterTests.sm_aapl()
@@ -58,7 +73,6 @@ class TransactionTests(DjangoModelTestCaseBase):
         SecurityMasterTests.sm_msft()
 
         trans_list, sec_ns_list = Transaction.load_transactions_from_file(Broker.FIDELITY, "test transactions.csv")
-        # put this line after load_positions_from_file() so the create default security function is used for SPAXX
 
         with self.subTest():
             self.equal(trans_list[0], TransactionTests.transaction_transfer_wire_transfer())

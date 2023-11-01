@@ -198,7 +198,8 @@ class Transaction(models.Model):
             try:
                 inv_acc = acc_dict[row["Account ID"]]
             except KeyError:
-                raise ObjectDoesNotExist("Account ID: " + row["Account ID"] + " does not exist as a FIDELITY account")
+                raise ObjectDoesNotExist("Account ID: " + row["Account ID"] + " does not exist as a " +
+                                         str(Broker.FIDELITY) + " account")
 
             if row["Symbol"] is None:
                 security = None
@@ -209,11 +210,11 @@ class Transaction(models.Model):
                     sec_ns_list.append(security)
                     sec_dict[row["Symbol"]] = security
 
-            trans_list.append(
-                Transaction(investment_account=inv_acc, trans_date=row["Date"], trans_type=row["Transaction Type"],
-                            action_type=row["Action Type"], description=row["Description"], security=security,
-                            quantity=row["Quantity"], price=row["Price"], amount=row["Amount"],
-                            commission=row["Commission"], fees=row["Fees"]))
+            trans_list.append(Transaction(
+                investment_account=inv_acc, trans_date=row["Date"], trans_type=row["Transaction Type"],
+                action_type=row["Action Type"], description=row["Description"], security=security,
+                quantity=row["Quantity"], price=row["Price"], amount=row["Amount"], commission=row["Commission"],
+                fees=row["Fees"]))
 
         with transaction.atomic():
             for t in trans_list:

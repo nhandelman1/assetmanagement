@@ -1,3 +1,6 @@
+from decimal import Decimal, InvalidOperation
+import datetime
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.validators import RegexValidator, ValidationError
 from django.db import models
@@ -84,17 +87,22 @@ class SecurityMaster(models.Model):
         ticker (str): common ticker for security
         asset_class (SecurityMaster.AssetClass):
         asset_subclass (SecurityMaster.AssetSubClass):
+        underlying_security (SecurityMaster): required for options but other asset classes are optional
+        expiration_date (datetime.date): required for options but other asset classes are optional
+        option_type (OptionType): required for options but other asset classes are optional
+        strike_price (Decimal): required for options but other asset classes are optional
         has_fidelity_lots (boolean): True if broker FIDELITY breaks a Position in this security into lots. False if
             it does not. Default True
     """
     class AssetClass(models.TextChoices):
         """ Major class of this investment security.
-        Classes: bond, equity, not_set, option
+        Classes: bond, crypto, equity, index, fx, mutual fund, not_set, option
         not_set is not an actual class. it indicates that this security needs to have its asset class set
         """
         BOND = "BOND", gettext_lazy("BOND")
         CRYPTO = "CRYPTO", gettext_lazy("CRYPTO")
         EQUITY = "EQUITY", gettext_lazy("EQUITY")
+        INDEX = "INDEX", gettext_lazy("INDEX")
         FX = "FX", gettext_lazy("FX")
         MUTUAL_FUND = "MUTUAL_FUND", gettext_lazy("MUTUAL_FUND")
         NOT_SET = "NOT_SET", gettext_lazy("NOT_SET")
@@ -124,6 +132,8 @@ class SecurityMaster(models.Model):
                 return "EQ_"
             elif asset_class == AssetClass.FX:
                 return "FX_"
+            elif asset_class == AssetClass.INDEX:
+                return "IN_"
             elif asset_class == AssetClass.MUTUAL_FUND:
                 return "MF_"
             elif asset_class == AssetClass.NOT_SET:
@@ -154,6 +164,8 @@ class SecurityMaster(models.Model):
                 return AssetSubClass.COMMON_STOCK, AssetSubClass.ETF
             elif asset_class == AssetClass.FX:
                 return AssetSubClass.FX,
+            elif asset_class == AssetClass.INDEX:
+                return AssetSubClass.INDEX,
             elif asset_class == AssetClass.MUTUAL_FUND:
                 return AssetSubClass.MONEY_MARKET,
             elif asset_class == AssetClass.NOT_SET:
@@ -169,6 +181,7 @@ class SecurityMaster(models.Model):
         crypto: crypto
         equities: common stock, etf
         fx: fx
+        index: index
         mutual fund: money market
         not_set is not an actual subclass. it indicates that this security needs to have its asset subclass set
         options: equity option, index option
@@ -180,6 +193,7 @@ class SecurityMaster(models.Model):
         ETF = "ETF", gettext_lazy("ETF")
         FX = "FX", gettext_lazy("FX")
         GOV_BOND = "GOV_BOND", gettext_lazy("GOV_BOND")
+        INDEX = "INDEX", gettext_lazy("INDEX")
         INDEX_OPTION = "INDEX_OPTION", gettext_lazy("INDEX_OPTION")
         MONEY_MARKET = "MONEY_MARKET", gettext_lazy("MONEY_MARKET")
         MUNI_BOND = "MUNI_BOND", gettext_lazy("MUNI_BOND")
@@ -206,6 +220,8 @@ class SecurityMaster(models.Model):
                 return AssetClass.EQUITY
             elif asset_subclass in (AssetSubClass.FX,):
                 return AssetClass.FX
+            elif asset_subclass in (AssetSubClass.INDEX,):
+                return AssetClass.INDEX
             elif asset_subclass in (AssetSubClass.MONEY_MARKET,):
                 return AssetClass.MUTUAL_FUND
             elif asset_subclass in (AssetSubClass.NOT_SET,):
@@ -215,6 +231,12 @@ class SecurityMaster(models.Model):
             else:
                 raise ValueError(str(asset_subclass) + " not set in SecurityMaster.AssetSubClass.get_class()")
 
+    class OptionType(models.TextChoices):
+        AMERICAN_CALL = "AMERICAN_CALL", gettext_lazy("AMERICAN_CALL")
+        AMERICAN_PUT = "AMERICAN_PUT", gettext_lazy("AMERICAN_PUT")
+        EUROPEAN_CALL = "EUROPEAN_CALL", gettext_lazy("EUROPEAN_CALL")
+        EUROPEAN_PUT = "EUROPEAN_PUT", gettext_lazy("EUROPEAN_PUT")
+
     # noinspection PyMethodParameters
     def validate_my_id(my_id):
         SecurityMaster.validate_my_id_partial(my_id)
@@ -223,6 +245,10 @@ class SecurityMaster(models.Model):
     ticker = models.CharField(max_length=30, unique=True)
     asset_class = models.CharField(max_length=20, choices=AssetClass.choices)
     asset_subclass = models.CharField(max_length=20, choices=AssetSubClass.choices)
+    underlying_security = models.ForeignKey("self", on_delete=models.PROTECT, blank=True, null=True)
+    expiration_date = models.DateField(blank=True, null=True)
+    option_type = models.CharField(max_length=15, choices=OptionType.choices, blank=True, null=True)
+    strike_price = models.DecimalField(max_digits=8, decimal_places=2, blank=True, null=True)
     has_fidelity_lots = models.BooleanField(default=True)
 
     objects = SecurityMasterDataManager()
@@ -245,10 +271,12 @@ class SecurityMaster(models.Model):
         super().clean_fields(exclude=exclude)
         self._validate_my_id_full()
         self._validate_asset_sub_class_for_asset_class()
+        self._validate_option_data()
 
     def save(self, *args, **kwargs):
         self._validate_my_id_full()
         self._validate_asset_sub_class_for_asset_class()
+        self._validate_option_data()
         return super().save(*args, **kwargs)
 
     def _validate_asset_sub_class_for_asset_class(self):
@@ -263,6 +291,13 @@ class SecurityMaster(models.Model):
         if self.my_id[:3] != must_have_prefix:
             raise ValidationError(str(self.asset_class) + " security my_id must have prefix '" + must_have_prefix +
                                   "' but has prefix '" + has_prefix + "'.")
+
+    def _validate_option_data(self):
+        if AssetClass(self.asset_class) == AssetClass.OPTION and \
+                (self.underlying_security is None or self.expiration_date is None or self.option_type is None or
+                 self.strike_price is None):
+            raise ValidationError("Options must have fields: 'underlying security', 'expiration date', 'option type'"
+                                  " and 'strike price' set.")
 
     @classmethod
     def generate_my_id(cls, asset_class):
@@ -282,6 +317,48 @@ class SecurityMaster(models.Model):
             max_my_id = AssetClass.get_my_id_prefix(asset_class) + "0000000"
         return AssetClass.get_my_id_prefix(asset_class) + str(int(max_my_id[3:]) + 1).zfill(7)
 
+    @classmethod
+    def get_option_data_from_ticker(cls, ticker):
+        """ Get underlying security, expiration date, option type and strike price from ticker
+
+        This function assumes all options are American Call or American Put and assumes the ticker is in Fidelity
+        format. Will need to update if either of these assumptions are wrong.
+
+        Args:
+            ticker (str): option ticker expected to have Fidelity format: underlyingtickerYYMMDD[C,P]strikeprice
+                option type is determined from the last 'C' or 'P'
+                expiration date is the 6 numbers before the last 'C' or 'P'
+                underlying ticker is the characters before the expiration date
+                strike price is the decimal number after the last 'C' or 'P'
+                e.g. AAPL220916C41.5, MSFT220916P325
+
+        Returns:
+            tuple[SecurityMaster, datetime.date, OptionType, Decimal]: underlying security, expiration date,
+                option type, strike price
+
+        Raises:
+            InvalidOperation: if strike price in ticker does not convert to a Decimal
+            ObjectDoesNotExist: if underlying security does not exist
+            ValueError: if expiration date in ticker is not 6 numbers, if option type in ticker is not 'C' or 'P'
+        """
+        cp_ind = max(ticker.rfind("C"), ticker.rfind("P"))
+        if cp_ind == -1:
+            raise ValueError(ticker + " - option type must be 'C' or 'P'.")
+
+        underlying_security = ticker[:cp_ind - 6]
+        try:
+            underlying_security = SecurityMaster.objects.get(ticker=underlying_security)
+        except ObjectDoesNotExist:
+            raise ObjectDoesNotExist(ticker + " - Underlying Security with ticker " + underlying_security +
+                                     " does not exist.")
+        exp_date = ticker[cp_ind - 6: cp_ind]
+        if len(exp_date) != 6:
+            raise ValueError(ticker + " - expiration date " + exp_date + " must have 6 numbers.")
+        exp_date = datetime.date(int("20" + exp_date[:2]), int(exp_date[2:4]), int(exp_date[4:]))
+        opt_type = OptionType.AMERICAN_CALL if ticker[cp_ind] == "C" else OptionType.AMERICAN_PUT
+        strike_price = Decimal(ticker[cp_ind+1:])
+        return underlying_security, exp_date, opt_type, strike_price
+
     @staticmethod
     def validate_my_id_partial(my_id):
         RegexValidator(regex=r'^[a-zA-Z]{2}_[0-9]{7}$',
@@ -291,3 +368,4 @@ class SecurityMaster(models.Model):
 
 AssetClass = SecurityMaster.AssetClass
 AssetSubClass = SecurityMaster.AssetSubClass
+OptionType = SecurityMaster.OptionType

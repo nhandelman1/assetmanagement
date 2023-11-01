@@ -19,47 +19,47 @@ class Position(models.Model):
 
     Attributes:
         investment_account (InvestmentAccount):
-        close_date (datetime.date):
+        eod_date (datetime.date): position as of this end of day date
         security (SecurityMaster):
         quantity (Decimal): can have partial shares
         close_price (Decimal): actual close price at the end of day. NOT ADJUSTED
         market_value (Decimal): typically quantity * close_price but this is not enforced
-        purchase_date (datetime.date): date this lot was purchased
+        enter_date (datetime.date): date this lot position was entered into
         cost_basis_price (Decimal):
         cost_basis_total (Decimal): typically quantity * cost_basis_price but this is not enforced
     """
 
     investment_account = models.ForeignKey(InvestmentAccount, models.PROTECT)
-    close_date = models.DateField()
+    eod_date = models.DateField()
     security = models.ForeignKey(SecurityMaster, models.PROTECT)
     quantity = models.DecimalField(max_digits=12, decimal_places=4)
     close_price = models.DecimalField(max_digits=8, decimal_places=2)
     market_value = models.DecimalField(max_digits=12, decimal_places=2)
-    purchase_date = models.DateField(blank=True, null=True, help_text="Required if broker breaks position into lots.")
+    enter_date = models.DateField(blank=True, null=True, help_text="Required if broker breaks position into lots.")
     cost_basis_price = models.DecimalField(max_digits=8, decimal_places=2)
     cost_basis_total = models.DecimalField(max_digits=12, decimal_places=2)
 
     def __repr__(self):
         return repr(self.investment_account) + ", " + repr(self.security) + ", " + repr(self.quantity) + ", " + \
-            repr(self.purchase_date)
+            repr(self.enter_date)
 
     def __str__(self):
         return self.investment_account.broker + ", " + self.investment_account.account_name + ", " + \
-            self.security.ticker + ", " + str(self.quantity) + ", " + str(self.purchase_date)
+            self.security.ticker + ", " + str(self.quantity) + ", " + str(self.enter_date)
 
     def clean_fields(self, exclude=None):
         super().clean_fields(exclude=exclude)
-        self.validate_broker_lots_purchase_date()
+        self._validate_broker_lots_enter_date()
 
     def save(self, *args, **kwargs):
-        self.validate_broker_lots_purchase_date()
+        self._validate_broker_lots_enter_date()
         return super().save(*args, **kwargs)
 
-    def validate_broker_lots_purchase_date(self):
+    def _validate_broker_lots_enter_date(self):
         if self.investment_account.broker == Broker.FIDELITY and self.security.has_fidelity_lots and \
-                self.purchase_date is None:
+                self.enter_date is None:
             raise ValidationError(self.security.ticker +
-                                  " is broken into lots by FIDELITY so positions must have a purchase date.")
+                                  " is broken into lots by FIDELITY so positions must have an enter date.")
 
     @classmethod
     def load_positions_from_fidelity_file(cls, file):
@@ -99,16 +99,16 @@ class Position(models.Model):
 
         df = pd.read_csv(file, names=list(range(10)))
         df.columns = df.loc[2]
-        df = df[3:][:-2].rename(columns={"Last": "Last Price"})
+        df = df[3:-2].rename(columns={"Last": "Last Price"})
 
-        close_date = None
+        eod_date = None
         for ind, date in df["Close Date"].items():
             try:
-                close_date = datetime.datetime.strptime(date, "%m/%d/%Y").date()
+                eod_date = datetime.datetime.strptime(date, "%m/%d/%Y").date()
                 break
             except Exception:
                 continue
-        if close_date is None:
+        if eod_date is None:
             raise ValueError("close date not found in 'Close Date' column. Manually add a close date in this column "
                              "for one of the positions")
 
@@ -159,7 +159,8 @@ class Position(models.Model):
             try:
                 inv_acc = acc_dict[row["Account ID"]]
             except KeyError:
-                raise ObjectDoesNotExist("Acount ID: " + row["Account ID"] + " does not exist as a FIDELITY account")
+                raise ObjectDoesNotExist("Account ID: " + row["Account ID"] + " does not exist as a " +
+                                         str(Broker.FIDELITY) + " account")
 
             security = sec_dict.get(row["Ticker"], None)
             if security is None:
@@ -168,11 +169,10 @@ class Position(models.Model):
                 sec_ns_list.append(security)
                 sec_dict[row["Ticker"]] = security
 
-            pos_list.append(
-                Position(investment_account=inv_acc, close_date=close_date, security=security,
-                         quantity=row["Lot Quantity"], close_price=row["Last Price"], market_value=row["Market Value"],
-                         purchase_date=row["Purchase Date"], cost_basis_price=row["Cost Basis Price"],
-                         cost_basis_total=row["Cost Basis Total"]))
+            pos_list.append(Position(
+                investment_account=inv_acc, eod_date=eod_date, security=security, quantity=row["Lot Quantity"],
+                close_price=row["Last Price"], market_value=row["Market Value"], enter_date=row["Purchase Date"],
+                cost_basis_price=row["Cost Basis Price"], cost_basis_total=row["Cost Basis Total"]))
 
         with transaction.atomic():
             for pos in pos_list:

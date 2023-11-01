@@ -19,7 +19,7 @@ class PositionTests(DjangoModelTestCaseBase):
 
     def test_save_clean(self):
         pos = PositionTests.position_fidelity_roth_aapl_lot921()
-        pos.purchase_date = None
+        pos.enter_date = None
 
         with self.assertRaises(ValidationError):
             pos.save()
@@ -46,6 +46,11 @@ class PositionTests(DjangoModelTestCaseBase):
         msft1225_pos = PositionTests.position_fidelity_roth_msft_lot1225()
         msft19_pos = PositionTests.position_fidelity_roth_msft_lot19()
 
+        with self.subTest():
+            # a position that should be broken down by lots is not broken down by lots
+            with self.assertRaises(ValidationError):
+                Position.load_positions_from_file(Broker.FIDELITY, "test positions missing lots.csv")
+
         pos_list, sec_ns_list = Position.load_positions_from_file(Broker.FIDELITY, "test positions.csv")
         # put this line after load_positions_from_file() so the create default security function is used for SPAXX
         spaxx_pos = PositionTests.position_fidelity_individual_spaxx()
@@ -71,51 +76,51 @@ class PositionTests(DjangoModelTestCaseBase):
     def position_fidelity_individual_spaxx():
         return Position(
             investment_account=InvestmentAccountTests.inv_acc_fidelity_individual(),
-            close_date=datetime.date(2023, 10, 27), security=SecurityMasterTests.sm_spaxx(),
+            eod_date=datetime.date(2023, 10, 27), security=SecurityMasterTests.sm_spaxx(),
             quantity=Decimal("3423.5300"), close_price=Decimal("1.00"), market_value=Decimal("3423.5300"),
-            purchase_date=None, cost_basis_price=Decimal("1.00"), cost_basis_total=Decimal("3423.5300"))
+            enter_date=None, cost_basis_price=Decimal("1.00"), cost_basis_total=Decimal("3423.5300"))
 
     @staticmethod
     def position_fidelity_roth_msft_lot21():
         return Position(
             investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(),
-            close_date=datetime.date(2023, 10, 27), security=SecurityMasterTests.sm_msft(),
+            eod_date=datetime.date(2023, 10, 27), security=SecurityMasterTests.sm_msft(),
             quantity=Decimal("21.0000"), close_price=Decimal("35.97"), market_value=Decimal("755.37"),
-            purchase_date=datetime.date(2023, 2, 21), cost_basis_price=Decimal("36.29"),
+            enter_date=datetime.date(2023, 2, 21), cost_basis_price=Decimal("36.29"),
             cost_basis_total=Decimal("762.09"))
 
     @staticmethod
     def position_fidelity_roth_msft_lot19():
         return Position(
             investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(),
-            close_date=datetime.date(2023, 10, 27), security=SecurityMasterTests.sm_msft(),
+            eod_date=datetime.date(2023, 10, 27), security=SecurityMasterTests.sm_msft(),
             quantity=Decimal("19.0000"), close_price=Decimal("35.97"), market_value=Decimal("683.43"),
-            purchase_date=datetime.date(2022, 9, 20), cost_basis_price=Decimal("35.82"),
+            enter_date=datetime.date(2022, 9, 20), cost_basis_price=Decimal("35.82"),
             cost_basis_total=Decimal("680.58"))
 
     @staticmethod
     def position_fidelity_roth_msft_lot1225():
         return Position(
             investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(),
-            close_date=datetime.date(2023, 10, 27), security=SecurityMasterTests.sm_msft(),
+            eod_date=datetime.date(2023, 10, 27), security=SecurityMasterTests.sm_msft(),
             quantity=Decimal("1225.0000"), close_price=Decimal("35.97"), market_value=Decimal("44063.25"),
-            purchase_date=datetime.date(2022, 9, 12), cost_basis_price=Decimal("43.47"),
+            enter_date=datetime.date(2022, 9, 12), cost_basis_price=Decimal("43.47"),
             cost_basis_total=Decimal("53250.75"))
 
     @staticmethod
     def position_fidelity_roth_aapl_lot13():
         return Position(
             investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(),
-            close_date=datetime.date(2023, 10, 27), security=SecurityMasterTests.sm_aapl(),
+            eod_date=datetime.date(2023, 10, 27), security=SecurityMasterTests.sm_aapl(),
             quantity=Decimal("13.0000"), close_price=Decimal("35.97"), market_value=Decimal("467.61"),
-            purchase_date=datetime.date(2022, 9, 20), cost_basis_price=Decimal("35.92"),
+            enter_date=datetime.date(2022, 9, 20), cost_basis_price=Decimal("35.92"),
             cost_basis_total=Decimal("466.96"))
 
     @staticmethod
     def position_fidelity_roth_aapl_lot921():
         return Position(
             investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(),
-            close_date=datetime.date(2023, 10, 27), security=SecurityMasterTests.sm_aapl(),
+            eod_date=datetime.date(2023, 10, 27), security=SecurityMasterTests.sm_aapl(),
             quantity=Decimal("921.0000"), close_price=Decimal("35.97"), market_value=Decimal("33128.37"),
-            purchase_date=datetime.date(2022, 9, 12), cost_basis_price=Decimal("43.47"),
+            enter_date=datetime.date(2022, 9, 12), cost_basis_price=Decimal("43.47"),
             cost_basis_total=Decimal("40035.87"))

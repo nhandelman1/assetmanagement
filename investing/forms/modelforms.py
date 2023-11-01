@@ -1,4 +1,7 @@
+from decimal import InvalidOperation
+
 from django import forms
+from django.core.exceptions import ObjectDoesNotExist
 
 from ..models.position import Position
 from ..models.securitymaster import SecurityMaster
@@ -31,7 +34,9 @@ class SecurityMasterAdminForm(forms.ModelForm):
 
     class Meta:
         model = SecurityMaster
-        help_texts = {"my_id": "auto populated - not editable"}
+        opt_str = "For " + str(SecurityMaster.AssetClass.OPTION) + ": leave blank to infer this field from ticker."
+        help_texts = {"my_id": "auto populated - not editable", "underlying_security": opt_str,
+                      "expiration_date": opt_str, "option_type": opt_str, "strike_price": opt_str}
         fields = "__all__"
 
     def __init__(self, *args, **kwargs):
@@ -41,7 +46,23 @@ class SecurityMasterAdminForm(forms.ModelForm):
 
     def clean(self):
         """ Override clean to set my_id if creating new SecurityMaster object or changing asset_class """
-        self.cleaned_data = super().clean()
-        if len(self.initial) == 0 or self.initial["asset_class"] != self.cleaned_data["asset_class"]:
-            self.cleaned_data["my_id"] = SecurityMaster.generate_my_id(self.cleaned_data["asset_class"])
+        cd = super().clean()  # super returns self.cleaned_data
+
+        if len(self.errors) > 0:
+            return self.cleaned_data
+
+        if len(self.initial) == 0 or self.initial["asset_class"] != cd["asset_class"]:
+            cd["my_id"] = SecurityMaster.generate_my_id(cd["asset_class"])
+        if cd["asset_class"] == SecurityMaster.AssetClass.OPTION.label:
+            fld_list = ["underlying_security", "expiration_date", "option_type", "strike_price"]
+            if any([cd[x] is None for x in fld_list]):
+                try:
+                    val_list = list(SecurityMaster.get_option_data_from_ticker(cd["ticker"]))
+                except (InvalidOperation, ObjectDoesNotExist, ValueError) as ex:
+                    raise forms.ValidationError(str(ex))
+
+                val_list[2] = val_list[2].value
+                for i, f in enumerate(fld_list):
+                    cd[f] = cd[f] if cd[f] is not None else val_list[i]
+
         return self.cleaned_data

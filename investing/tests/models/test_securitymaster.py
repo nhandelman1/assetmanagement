@@ -1,13 +1,18 @@
-from django.core.exceptions import ValidationError
+from decimal import Decimal, InvalidOperation
+import datetime
 
-from ...models.securitymaster import AssetClass, AssetSubClass, SecurityMaster
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
+
+from ...models.securitymaster import AssetClass, AssetSubClass, OptionType, SecurityMaster
 from util.djangomodeltestcasebase import DjangoModelTestCaseBase
 
 
 class SecurityMasterTests(DjangoModelTestCaseBase):
 
     def equal(self, model1: SecurityMaster, model2: SecurityMaster):
-        self.simple_equal(model1, model2, SecurityMaster)
+        if model1.underlying_security is not None or model2.underlying_security is not None:
+            SecurityMasterTests().equal(model1.underlying_security, model2.underlying_security)
+        self.simple_equal(model1, model2, SecurityMaster, rem_attr_list=["underlying_security"])
 
     def test_asset_class_get_my_id_prefix(self):
         # all AssetClass enums are set in get_my_id_prefix()
@@ -107,22 +112,87 @@ class SecurityMasterTests(DjangoModelTestCaseBase):
         SecurityMasterTests.sm_msft()
         self.assertEqual(SecurityMaster.generate_my_id(AssetClass.EQUITY), "EQ_1000002")
 
+    def test_get_option_data_from_ticker(self):
+        # underlying security does not exist
+        with self.subTest():
+            with self.assertRaises(ObjectDoesNotExist):
+                SecurityMaster.get_option_data_from_ticker("AAPL220916C41.5")
+
+        aapl = SecurityMasterTests.sm_aapl()
+        SecurityMasterTests.sm_msft()
+
+        # expiration date invalid
+        with self.subTest():
+            with self.assertRaises(ValueError):
+                SecurityMaster.get_option_data_from_ticker("AAPL22a916C41.5")
+
+        # option type not found
+        with self.subTest():
+            with self.assertRaises(ValueError):
+                SecurityMaster.get_option_data_from_ticker("MSFT220916D41.5")
+
+        # option type not found
+        with self.subTest():
+            with self.assertRaises(InvalidOperation):
+                SecurityMaster.get_option_data_from_ticker("MSFT220916C41.5a")
+
+        underlying_security, exp_date, opt_type, strike_price = \
+            SecurityMaster.get_option_data_from_ticker("AAPL220916C41.5")
+        self.equal(underlying_security, aapl)
+        self.assertEqual(exp_date, datetime.date(2022, 9, 16))
+        self.assertEqual(opt_type, OptionType.AMERICAN_CALL)
+        self.assertEqual(strike_price, Decimal("41.5"))
+
     def test_save_clean(self):
         # no validation error
         sm = SecurityMasterTests.sm_aapl()
 
         # should raise ValidationError
-        with self.assertRaises(ValidationError):
+        with self.subTest():
             sm.asset_subclass = AssetSubClass.INDEX_OPTION
-            sm.save()
+            with self.assertRaises(ValidationError):
+                sm.save()
 
         # no validation error
         sm = SecurityMasterTests.sm_aapl(create=False)
 
         # should raise ValidationError
-        with self.assertRaises(ValidationError):
+        with self.subTest():
             sm.asset_subclass = AssetSubClass.INDEX_OPTION
-            sm.clean_fields()
+            with self.assertRaises(ValidationError):
+                sm.clean_fields()
+
+        with self.subTest():
+            sm = SecurityMasterTests.sm_aapl_call()
+            sm.underlying_security = None
+            with self.assertRaises(ValidationError):
+                sm.save()
+            with self.assertRaises(ValidationError):
+                sm.clean_fields()
+
+        with self.subTest():
+            sm = SecurityMasterTests.sm_aapl_call()
+            sm.expiration_date = None
+            with self.assertRaises(ValidationError):
+                sm.save()
+            with self.assertRaises(ValidationError):
+                sm.clean_fields()
+
+        with self.subTest():
+            sm = SecurityMasterTests.sm_aapl_call()
+            sm.option_type = None
+            with self.assertRaises(ValidationError):
+                sm.save()
+            with self.assertRaises(ValidationError):
+                sm.clean_fields()
+
+        with self.subTest():
+            sm = SecurityMasterTests.sm_aapl_call()
+            sm.strike_price = None
+            with self.assertRaises(ValidationError):
+                sm.save()
+            with self.assertRaises(ValidationError):
+                sm.clean_fields()
 
     @staticmethod
     def sm_aapl(create=True):
@@ -133,16 +203,31 @@ class SecurityMasterTests(DjangoModelTestCaseBase):
 
     @staticmethod
     def sm_aapl_call(create=True):
+        """
+            underlying_security = models.ForeignKey("self", on_delete=models.PROTECT, blank=True, null=True)
+    expiration_date = models.DateField(blank=True, null=True)
+    option_type = models.CharField(max_length=15, choices=OptionType.choices, blank=True, null=True)
+    strike_price = models.DecimalField(max_digits=8, decimal_places=2, blank=True, null=True)
+        Args:
+            create:
+
+        Returns:
+
+        """
         sm = (SecurityMaster.objects.get_or_create if create else SecurityMaster)(
             my_id="OP_0000001", ticker="AAPL220916C41.5", asset_class=AssetClass.OPTION,
-            asset_subclass=AssetSubClass.EQUITY_OPTION, has_fidelity_lots=True)
+            asset_subclass=AssetSubClass.EQUITY_OPTION, underlying_security=SecurityMasterTests.sm_aapl(),
+            expiration_date=datetime.date(2022, 9, 16), option_type=OptionType.AMERICAN_CALL,
+            strike_price=Decimal("41.5"), has_fidelity_lots=True)
         return sm[0] if create else sm
 
     @staticmethod
     def sm_aapl_put(create=True):
         sm = (SecurityMaster.objects.get_or_create if create else SecurityMaster)(
             my_id="OP_0000002", ticker="AAPL220916P37.5", asset_class=AssetClass.OPTION,
-            asset_subclass=AssetSubClass.EQUITY_OPTION, has_fidelity_lots=True)
+            asset_subclass=AssetSubClass.EQUITY_OPTION, underlying_security=SecurityMasterTests.sm_aapl(),
+            expiration_date=datetime.date(2022, 9, 16), option_type=OptionType.AMERICAN_PUT,
+            strike_price=Decimal("37.5"), has_fidelity_lots=True)
         return sm[0] if create else sm
 
     @staticmethod

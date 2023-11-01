@@ -1,3 +1,4 @@
+from .closedposition import ClosedPosition
 from .investmentaccount import InvestmentAccount
 from .newssentiment import TopicSentiment, TickerSentiment, NewsSentiment
 from .position import Position
