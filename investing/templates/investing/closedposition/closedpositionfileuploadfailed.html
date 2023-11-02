@@ -1,0 +1,11 @@
+{% extends "investing/closedposition/closedpositionbase.html" %}
+
+{% block title %}Closed Position File Upload Failed{% endblock title %}
+{% block headertitle %}Closed Position File Upload Failed{% endblock headertitle %}
+
+{% block content %}
+<p>
+    filename: {{ filename }} <br>
+    Error: {{ error }}
+</p>
+{% endblock content %}

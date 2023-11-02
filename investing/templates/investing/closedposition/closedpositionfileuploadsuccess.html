@@ -1,0 +1,90 @@
+{% extends "investing/closedposition/closedpositionbase.html" %}
+
+{% block title %}Closed Position File Upload Success{% endblock title %}
+{% block headertitle %}Closed Position File Upload Success{% endblock headertitle %}
+
+{% block content %}
+<h3>Default Securities Created</h3>
+<p>
+    The following securities should be updated through the
+    <a href="{% url 'investing:securitymaster' %}" target="_blank">Security Master</a> page.
+    Search for securities with Asset Class 'NOT_SET'. <br><br>
+    {{ sec_ns_str }}
+</p>
+<hr>
+<h3>Closed Positions Not Saved</h3>
+<p>
+    Closed Positions where the investment account and close date combination had existing database records were not
+    saved. This is to prevent duplicate closed positions from being saved. <br>
+    To save the unsaved closed positions in this file, delete the existing records from the database and upload the
+    file again. <br>
+    The following investment account and close date combinations were not saved: <br><br>
+    <table width=800px>
+        <thead>
+            <tr>
+                <th>Broker</th>
+                <th>Account Name</th>
+                <th>Transaction Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in eiacd_list %}
+                <tr>
+                <td>{{ d.broker }}</td>
+                <td>{{ d.account_name }}</td>
+                <td>{{ d.date }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</p>
+<hr>
+<h3>Closed Positions Saved</h3>
+<p> The following closed positions were saved:
+    <table width=2000px>
+        <thead>
+            <tr>
+                <th>Broker</th>
+                <th>Account Name</th>
+                <th>Enter Date</th>
+                <th>Close Date</th>
+                <th>Security</th>
+                <th>Quantity</th>
+                <th>Cost Basis Price</th>
+                <th>Cost Basis Total</th>
+                <th>Proceeds Price</th>
+                <th>Proceeds Total</th>
+                <th>Short Term PnL</th>
+                <th>Long Term PnL</th>
+                <th>Cost Basis Price Unadj</th>
+                <th>Cost Basis Total Unadj</th>
+                <th>Short Term PnL Unadj</th>
+                <th>Long Term PnL Unadj</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in pos_list %}
+                <tr>
+                <td>{{ t.0 }}</td>
+                <td>{{ t.1 }}</td>
+                <td>{{ t.2 }}</td>
+                <td>{{ t.3 }}</td>
+                <td>{{ t.4 }}</td>
+                <td>{{ t.5 }}</td>
+                <td>{{ t.6 }}</td>
+                <td>{{ t.7 }}</td>
+                <td>{{ t.8 }}</td>
+                <td>{{ t.9 }}</td>
+                <td>{{ t.10 }}</td>
+                <td>{{ t.11 }}</td>
+                <td>{{ t.12 }}</td>
+                <td>{{ t.13 }}</td>
+                <td>{{ t.14 }}</td>
+                <td>{{ t.15 }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</p>
+
+{% endblock content %}

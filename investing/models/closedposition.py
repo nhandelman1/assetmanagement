@@ -120,8 +120,11 @@ class ClosedPosition(models.Model):
                 /files/input/closedpositions/ or a File object. file is expected to be csv
 
         Returns:
-            tuple[list[ClosedPosition], list[SecurityMaster]]: each ClosedPosition instance is saved to the database,
-                SecurityMaster list contains securities that did not exist but were created and set to default
+            tuple[list[ClosedPosition], list[SecurityMaster], set[tuple[InvestmentAccount, datetime.date]]]:
+                ClosedPosition instances with investment account / close date combinations that have no records are
+                saved to the database, SecurityMaster list contains securities that did not exist but were created and
+                set to default, set of investment account / close date combinations that have records in the
+                database already (we dont want to create multiple copies of the same closed position)
 
         Raises:
             DatabaseError: if atomic transaction to save all positions fails
@@ -176,14 +179,25 @@ class ClosedPosition(models.Model):
         acc_dict = InvestmentAccount.objects.account_id_to_account_dict(
             df["Account ID"].drop_duplicates().tolist(), Broker.FIDELITY)
         sec_dict = SecurityMaster.objects.ticker_to_security_dict(df["Symbol"].drop_duplicates().tolist())
+
+        # investment account and close date combinations that have closed position(s) saved already
+        rem_acc_dates = list(ClosedPosition.objects.values("investment_account", "close_date").distinct())
+        rem_acc_dates = [(d["investment_account"], d["close_date"]) for d in rem_acc_dates]
+
         sec_ns_list = []
         pos_list = []
+        exist_inv_acc_dates_set = set()
         for ind, row in df.iterrows():
             try:
                 inv_acc = acc_dict[row["Account ID"]]
             except KeyError:
                 raise ObjectDoesNotExist("Account ID: " + row["Account ID"] + " does not exist as a " +
                                          str(Broker.FIDELITY) + " account")
+
+            # don't keep closed position if its investment account and close date combo has saved closed position(s)
+            if (inv_acc.pk, row["Close Date"]) in rem_acc_dates:
+                exist_inv_acc_dates_set.add((inv_acc, row["Close Date"]))
+                continue
 
             security = sec_dict.get(row["Symbol"], None)
             if security is None:
@@ -201,7 +215,7 @@ class ClosedPosition(models.Model):
             for pos in pos_list:
                 pos.save()
 
-        return pos_list, sec_ns_list
+        return pos_list, sec_ns_list, exist_inv_acc_dates_set
 
     @classmethod
     def load_closed_positions_from_file(cls, broker, file):
@@ -215,8 +229,11 @@ class ClosedPosition(models.Model):
                 /files/input/closedpositions/ or a File object.
 
         Returns:
-            tuple[list[ClosedPosition], list[SecurityMaster]]: each ClosedPosition instance is saved to the database,
-                SecurityMaster list contains securities that did not exist but were created and set to default
+            tuple[list[ClosedPosition], list[SecurityMaster], set[tuple[InvestmentAccount, datetime.date]]]:
+                ClosedPosition instances with investment account / close date combinations that have no records are
+                saved to the database, SecurityMaster list contains securities that did not exist but were created and
+                set to default, set of investment account / close date combinations that have records in the
+                database already (we dont want to create multiple copies of the same closed position)
 
         Raises:
             DatabaseError: if a function called from this function raises a DatabaseError

@@ -1,0 +1,12 @@
+{% extends "investing/closedposition/closedpositionbase.html" %}
+
+{% block title %}Closed Position File Upload{% endblock title %}
+{% block headertitle %}Closed Position File Upload{% endblock headertitle %}
+
+{% block content %}
+<form action="{% url 'investing:closedpositionfileupload' %}" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <p><input type="submit" value="Upload"></p>
+</form>
+{% endblock content %}

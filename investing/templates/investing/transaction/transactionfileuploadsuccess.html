@@ -1,0 +1,82 @@
+{% extends "investing/transaction/transactionbase.html" %}
+
+{% block title %}Transaction File Upload Success{% endblock title %}
+{% block headertitle %}Transaction File Upload Success{% endblock headertitle %}
+
+{% block content %}
+<h3>Default Securities Created</h3>
+<p>
+    The following securities should be updated through the
+    <a href="{% url 'investing:securitymaster' %}" target="_blank">Security Master</a> page.
+    Search for securities with Asset Class 'NOT_SET'. <br><br>
+    {{ sec_ns_str }}
+</p>
+<hr>
+<h3>Transactions Not Saved</h3>
+<p>
+    Transactions where the investment account and transaction date combination had existing database records were not
+    saved. This is to prevent duplicate transactions from being saved. <br>
+    To save the unsaved transactions in this file, delete the existing records from the database and upload the file
+    again. <br>
+    The following investment account and transaction date combinations were not saved: <br><br>
+    <table width=800px>
+        <thead>
+            <tr>
+                <th>Broker</th>
+                <th>Account Name</th>
+                <th>Transaction Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in eiacd_list %}
+                <tr>
+                <td>{{ d.broker }}</td>
+                <td>{{ d.account_name }}</td>
+                <td>{{ d.date }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</p>
+<hr>
+<h3>Transactions Saved</h3>
+<p> The following transactions were saved:
+    <table width=2000px>
+        <thead>
+            <tr>
+                <th>Broker</th>
+                <th>Account Name</th>
+                <th>Transaction Date</th>
+                <th>Transaction Type</th>
+                <th>Action Type</th>
+                <th>Description</th>
+                <th>Security</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Amount</th>
+                <th>Commission</th>
+                <th>Fees</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in trans_list %}
+                <tr>
+                <td>{{ t.0 }}</td>
+                <td>{{ t.1 }}</td>
+                <td>{{ t.2 }}</td>
+                <td>{{ t.3 }}</td>
+                <td>{{ t.4 }}</td>
+                <td>{{ t.5 }}</td>
+                <td>{{ t.6 }}</td>
+                <td>{{ t.7 }}</td>
+                <td>{{ t.8 }}</td>
+                <td>{{ t.9 }}</td>
+                <td>{{ t.10 }}</td>
+                <td>{{ t.11 }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</p>
+
+{% endblock content %}

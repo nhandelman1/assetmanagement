@@ -1,0 +1,19 @@
+{% extends "investing/investingbase.html" %}
+
+{% block title %}Investing Main Page{% endblock title %}
+{% block headertitle %}Investing Main Page{% endblock headertitle %}
+
+{% block content %}
+<hr>
+<h3><u>Data</u></h3>
+<p><a href="{% url 'investing:closedposition' %}">Closed Position</a></p>
+<p><a href="{% url 'investing:investmentaccount' %}">Investment Account</a></p>
+<p><a href="{% url 'investing:position' %}">Position</a></p>
+<p><a href="{% url 'investing:securitymaster' %}">Security Master</a></p>
+<p><a href="{% url 'investing:transaction' %}">Transaction</a></p>
+
+
+<hr>
+<h3><u>Analysis</u></h3>
+
+{% endblock content %}

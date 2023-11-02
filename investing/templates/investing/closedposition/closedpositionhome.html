@@ -1,0 +1,9 @@
+{% extends "investing/closedposition/closedpositionbase.html" %}
+
+{% block title %}Closed Position Main Page{% endblock title %}
+{% block headertitle %}Closed Position Main Page{% endblock headertitle %}
+
+{% block content %}
+<p>Use Admin to CRUD closed positions.</p>
+<p><a href="{% url 'investing:closedpositionfileupload' %}">Load Closed Positions From File</a></p>
+{% endblock content %}

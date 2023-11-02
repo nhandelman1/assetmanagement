@@ -1,0 +1,6 @@
+from .closedpositionview import closed_position_home, closed_position_file_upload
+from .investmentaccountview import investment_account_home
+from .investingview import investing_home
+from .positionview import position_home
+from .securitymasterview import security_master_home
+from .transactionview import transaction_home, transaction_file_upload

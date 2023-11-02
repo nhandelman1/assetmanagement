@@ -1,0 +1,11 @@
+{% extends "investing/transaction/transactionbase.html" %}
+
+{% block title %}Transaction File Upload Failed{% endblock title %}
+{% block headertitle %}Transaction File Upload Failed{% endblock headertitle %}
+
+{% block content %}
+<p>
+    filename: {{ filename }} <br>
+    Error: {{ error }}
+</p>
+{% endblock content %}

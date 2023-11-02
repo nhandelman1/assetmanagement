@@ -1,0 +1,12 @@
+{% extends "investing/transaction/transactionbase.html" %}
+
+{% block title %}Transaction File Upload{% endblock title %}
+{% block headertitle %}Transaction File Upload{% endblock headertitle %}
+
+{% block content %}
+<form action="{% url 'investing:transactionfileupload' %}" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <p><input type="submit" value="Upload"></p>
+</form>
+{% endblock content %}

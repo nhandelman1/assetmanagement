@@ -123,14 +123,19 @@ class Transaction(models.Model):
 
         File must be csv from Fidelity Active Trader Pro -> Accounts -> History. Columns must be: Date, Account,
         Symbol, Description, Currency, Quantity, Price, Amount, Commission, Fees, Type.
+        Transactions in the file will not be created if there already exists transactions with the same investment
+        account and transaction date. This is to prevent the same transaction being saved more than once.
 
         Args:
             file (Union[str, django.core.files.base.File]): name of file in media directory /files/input/transactions/
                 or a File object. file is expected to be csv
 
         Returns:
-            tuple[list[Transaction], list[SecurityMaster]]: each Transaction instance is saved to the database,
-                SecurityMaster list contains securities that did not exist but were created and set to default
+            tuple[list[Transaction], list[SecurityMaster], set[tuple[InvestmentAccount, datetime.date]]]:
+                Transaction instances with investment account / transaction date combinations that have no records are
+                saved to the database, SecurityMaster list contains securities that did not exist but were created and
+                set to default, set of investment account / transaction date combinations that have records in the
+                database already (we dont want to create multiple copies of the same transaction)
 
         Raises:
             DatabaseError: if atomic transaction to save all transactions fails
@@ -192,14 +197,25 @@ class Transaction(models.Model):
         acc_dict = InvestmentAccount.objects.account_id_to_account_dict(
             df["Account ID"].drop_duplicates().tolist(), Broker.FIDELITY)
         sec_dict = SecurityMaster.objects.ticker_to_security_dict(df["Symbol"].drop_duplicates().tolist())
+
+        # investment account and date combinations that have transaction(s) saved already
+        rem_acc_dates = list(Transaction.objects.values("investment_account", "trans_date").distinct())
+        rem_acc_dates = [(d["investment_account"], d["trans_date"]) for d in rem_acc_dates]
+
         sec_ns_list = []
         trans_list = []
+        exist_inv_acc_dates_set = set()
         for ind, row in df.iterrows():
             try:
                 inv_acc = acc_dict[row["Account ID"]]
             except KeyError:
                 raise ObjectDoesNotExist("Account ID: " + row["Account ID"] + " does not exist as a " +
                                          str(Broker.FIDELITY) + " account")
+
+            # don't keep transaction if its investment account and date combo has saved transaction(s)
+            if (inv_acc.pk, row["Date"]) in rem_acc_dates:
+                exist_inv_acc_dates_set.add((inv_acc, row["Date"]))
+                continue
 
             if row["Symbol"] is None:
                 security = None
@@ -220,13 +236,15 @@ class Transaction(models.Model):
             for t in trans_list:
                 t.save()
 
-        return trans_list, sec_ns_list
+        return trans_list, sec_ns_list, exist_inv_acc_dates_set
 
     @classmethod
     def load_transactions_from_file(cls, broker, file):
         """ Open file and create and return transactions
 
         If a ticker/symbol is not found, a default SecurityMaster object for that ticker/symbol will be created
+        Transactions in the file will not be created if there already exists transactions with the same investment
+        account and transaction date. This is to prevent the same transaction being saved more than once.
 
         Args:
             broker (Broker): load transactions from this broker
@@ -234,8 +252,11 @@ class Transaction(models.Model):
                 or a File object.
 
         Returns:
-            tuple[list[Transaction], list[SecurityMaster]]: each Transaction instance is saved to the database,
-                SecurityMaster list contains securities that did not exist but were created and set to default
+            tuple[list[Transaction], list[SecurityMaster], set[tuple[InvestmentAccount, datetime.date]]]:
+                Transaction instances with investment account / transaction date combinations that have no records are
+                saved to the database, SecurityMaster list contains securities that did not exist but were created and
+                set to default, set of investment account / transaction date combinations that have records in the
+                database already (we dont want to create multiple copies of the same transaction)
 
         Raises:
             DatabaseError: if a function called from this function raises a DatabaseError

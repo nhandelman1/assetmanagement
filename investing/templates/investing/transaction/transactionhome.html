@@ -1,0 +1,9 @@
+{% extends "investing/transaction/transactionbase.html" %}
+
+{% block title %}Transaction Main Page{% endblock title %}
+{% block headertitle %}Transaction Main Page{% endblock headertitle %}
+
+{% block content %}
+<p>Use Admin to CRUD transactions.</p>
+<p><a href="{% url 'investing:transactionfileupload' %}">Load Transactions From File</a></p>
+{% endblock content %}

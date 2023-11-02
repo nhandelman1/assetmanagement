@@ -65,14 +65,15 @@ class TransactionTests(DjangoModelTestCaseBase):
             with self.assertRaises(ValueError):
                 Transaction.load_transactions_from_file(Broker.FIDELITY, "test transactions description fail.csv")
 
-        InvestmentAccountTests.inv_acc_fidelity_individual()
+        inv_acc_fid_ind = InvestmentAccountTests.inv_acc_fidelity_individual()
         InvestmentAccountTests.inv_acc_fidelity_roth()
         SecurityMasterTests.sm_aapl()
         SecurityMasterTests.sm_aapl_call()
         SecurityMasterTests.sm_aapl_put()
         SecurityMasterTests.sm_msft()
 
-        trans_list, sec_ns_list = Transaction.load_transactions_from_file(Broker.FIDELITY, "test transactions.csv")
+        trans_list, sec_ns_list, exist_inv_acc_dates_set = Transaction.load_transactions_from_file(
+            Broker.FIDELITY, "test transactions.csv")
 
         with self.subTest():
             self.equal(trans_list[0], TransactionTests.transaction_transfer_wire_transfer())
@@ -110,10 +111,23 @@ class TransactionTests(DjangoModelTestCaseBase):
             self.equal(trans_list[16], TransactionTests.transaction_transfer_transfer_of_assets_rescredit())
         with self.subTest():
             self.equal(trans_list[17], TransactionTests.transaction_transfer_transfer_of_assets_receive())
-
         with self.subTest():
             self.assertEqual(len(sec_ns_list), 1)
             SecurityMasterTests().equal(sec_ns_list[0], SecurityMasterTests.sm_spaxx(has_fidelity_lots=True))
+        with self.subTest():
+            self.assertEqual(len(exist_inv_acc_dates_set), 0)
+
+        trans_list, sec_ns_list, exist_inv_acc_dates_set = Transaction.load_transactions_from_file(
+            Broker.FIDELITY, "test transactions duplicate.csv")
+
+        with self.subTest():
+            self.assertEqual(len(trans_list), 1)
+        with self.subTest():
+            self.assertEqual(len(sec_ns_list), 0)
+        with self.subTest():
+            # update expected number of transactions when number of transactions in "test transactions.csv" changes
+            self.assertEqual(len(exist_inv_acc_dates_set), 1)
+            self.assertEqual(list(exist_inv_acc_dates_set)[0], (inv_acc_fid_ind, datetime.date(2023, 10, 27)))
 
     @staticmethod
     def transaction_corp_act_dividend_received():

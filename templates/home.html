@@ -5,6 +5,7 @@
 {% block content %}
 {% if user.is_authenticated %}
   Hi {{ user.username }}!
+  <p><a href="{% url 'investing:investing' %}">Investing</a></p>
   <p><a href="{% url 'realestate:realestate' %}">Real Estate</a></p>
   <p><a href="{% url 'admin:index' %}">Admin</a></p>
   <p><a href="{% url 'logout' %}">Log Out</a></p>
