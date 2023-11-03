@@ -5,3 +5,4 @@ Django~=4.2.5
 tablib~=3.5.0
 numpy~=1.25.2
 requests~=2.31.0
+python-dotenv~=1.0.0
