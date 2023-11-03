@@ -162,7 +162,7 @@ class Transaction(models.Model):
                 return TransactionType.TRADE, ActionType.SELL_SHORT
             elif desc_str[:7] == "CONTRIB" or desc_str[:10] == "MONEY LINE" or desc_str[:13] == "ROLLOVER CASH" or \
                     desc_str[:18] == "TRANSFER OF ASSETS" or desc_str[:14] == "TRANSFERRED TO" or \
-                    desc_str[:10] == "WIRE TRANS":
+                    desc_str[:10] == "WIRE TRANS" or desc_str == "RECEIVED FROM YOU":
                 return TransactionType.TRANSFER, ActionType.TRANSFER
             else:
                 raise ValueError("Unable to match description: '" + desc_str +
