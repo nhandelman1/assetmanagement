@@ -10,9 +10,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
-from pathlib import Path
+import dotenv
 import os
+from pathlib import Path
 
+dotenv.load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -22,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-g)c$9tp$wpoteg0f6ffva7fa!@p%13e2b!j*+e49f9ar+yy=-a'
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -80,11 +82,11 @@ WSGI_APPLICATION = 'assetmanagement.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        "NAME": "assetmanagement_dev",
-        "USER": "root",
-        "PASSWORD": "=a4tUtheWur_n8=udAs_aZ7qeB84w=",
-        "HOST": "localhost",
+        'ENGINE': os.getenv("MYSQL_ENGINE"),
+        "NAME": os.getenv("MYSQL_NAME"),
+        "USER": os.getenv("MYSQL_USER"),
+        "PASSWORD": os.getenv("MYSQL_PASSWORD"),
+        "HOST": os.getenv("MYSQL_HOST"),
     }
 }
 
