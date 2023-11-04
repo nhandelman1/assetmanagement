@@ -26,6 +26,7 @@ class InvestmentAccount(models.Model):
         account_id (str): account identifier that won't change
         account_name (str): account identifier that could change (and shouldn't be used as the primary identifier)
         taxable (boolean): is this account taxable or not
+        create_date (datetime.date): account was created on this date
     """
     class Broker(models.TextChoices):
         FIDELITY = "FIDELITY", gettext_lazy("FIDELITY")
@@ -40,11 +41,12 @@ class InvestmentAccount(models.Model):
     account_id = models.CharField(max_length=20)
     account_name = models.CharField(max_length=30)
     taxable = models.BooleanField()
+    create_date = models.DateField()
 
     objects = InvestmentAccountDataManager()
 
     def __repr__(self):
-        return self.__str__() + ", " + str(self.taxable)
+        return self.__str__() + ", " + str(self.taxable) + ", " + str(self.create_date)
 
     def __str__(self):
         """ __str__ override
