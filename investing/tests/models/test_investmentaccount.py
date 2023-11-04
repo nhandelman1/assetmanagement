@@ -1,3 +1,5 @@
+import datetime
+
 from django.db import IntegrityError
 
 from ...models.investmentaccount import Broker, InvestmentAccount
@@ -18,10 +20,12 @@ class InvestmentAccountTests(DjangoModelTestCaseBase):
     @staticmethod
     def inv_acc_fidelity_individual(get_or_create=True):
         inv_acc = (InvestmentAccount.objects.get_or_create if get_or_create else InvestmentAccount.objects.create)(
-            broker=Broker.FIDELITY, account_id="Z12345678", account_name="Individual - Test", taxable=True)
+            broker=Broker.FIDELITY, account_id="Z12345678", account_name="Individual - Test", taxable=True,
+            create_date=datetime.date(2020, 1, 1))
         return inv_acc[0] if get_or_create else inv_acc
 
     @staticmethod
     def inv_acc_fidelity_roth():
         return InvestmentAccount.objects.get_or_create(
-            broker=Broker.FIDELITY, account_id="123456789", account_name="ROTH IRA - Test", taxable=False)[0]
+            broker=Broker.FIDELITY, account_id="123456789", account_name="ROTH IRA - Test", taxable=False,
+            create_date=datetime.date(2021, 12, 31))[0]
