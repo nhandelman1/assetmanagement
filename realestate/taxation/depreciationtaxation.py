@@ -72,10 +72,12 @@ class DepreciationType:
         NONE: no convention specified. functions of this class will specify how this is handled
         MM: Mid-Month Convention
         FM: Full-Month Convention
+        HY: Half-Year Convention
         """
         NONE = "None"
         MM = "MM"
         FM = "FM"
+        HY = "HY"
 
     # aliases for convenience
     DS = DepreciationSystem
@@ -132,7 +134,9 @@ class DepreciationType:
         Determined depending on instance variables. The following cases are considered:
             1. any instance variable set to its Enum class's NONE enum: Decimal(0)
             2. purchase and disposal happen in the same year: Decimal(0). no depreciation can be taken
-            3. [GDS] - [Residential Real Estate, 5 Year Property] - [Straight Line] - [Mid-Month, Full-Month]:
+            3. GDS - Residential Real Estate - Straight Line - [Mid-Month, Full-Month]
+                calculate depreciation ratio considering args. See 4.
+            4. GDS - 5 Year Property - Straight Line - Half-Year:
                 calculate depreciation ratio considering args. See 4.
             4. This function does not assume that depreciation was taken perfectly on schedule (i.e. property was idle
                 for some period(s)). So, every year after the purchase year, through the year before the disposal year
@@ -161,26 +165,30 @@ class DepreciationType:
 
         if self.dep_sys == self.DepreciationSystem.GDS:
             if self.dep_method == self.DepreciationMethod.SL:
-                year_usage_rat = None
+                months_used = None
                 if self.dep_conv in (self.DepreciationConvention.MM, self.DepreciationConvention.FM):
                     # tax year is purchase year
                     if purchase_date.year == tax_year:
-                        year_usage_rat = Decimal(13) - Decimal(purchase_date.month)
+                        months_used = Decimal(13) - Decimal(purchase_date.month)
                         if self.dep_conv == self.DepreciationConvention.MM:
-                            year_usage_rat -= Decimal("0.5")
+                            months_used -= Decimal("0.5")
                     # tax year is disposal year
                     elif disposal_date is not None and disposal_date.year == tax_year:
-                        year_usage_rat = Decimal(disposal_date.month) - Decimal(1)
+                        months_used = Decimal(disposal_date.month) - Decimal(1)
                         if self.dep_conv == self.DepreciationConvention.MM:
-                            year_usage_rat += Decimal("0.5")
+                            months_used += Decimal("0.5")
                     # tax year is between purchase and disposal years
                     else:
-                        year_usage_rat = Decimal(12)
+                        months_used = Decimal(12)
 
-                    year_usage_rat /= Decimal(12)
+                if self.dep_conv == self.DepreciationConvention.HY:
+                    if purchase_date.year == tax_year or (disposal_date is not None and disposal_date.year == tax_year):
+                        months_used = Decimal(6)
+                    else:
+                        months_used = Decimal(12)
 
-                if year_usage_rat is not None:
-                    rat_val = Decimal(1) / self.prop_class.get_recovery_period(self.dep_sys) * year_usage_rat
+                if months_used is not None:
+                    rat_val = months_used / Decimal(12) / self.prop_class.get_recovery_period(self.dep_sys)
 
         if rat_val is None:
             raise NotImplementedError(str(self) + " not implemented for function depreciation_ratio_for_tax_year()")

@@ -29,8 +29,8 @@ class DepreciationTypeTests(TestCaseBase):
         dt = DT.from_dep_class(RealPropertyValue.DepClass.GDS_RRP_SL_MM)
         self.equal(dt, DT(DT.DS.GDS, DT.PC.RRP, DT.DM.SL, DT.DC.MM))
 
-        dt = DT.from_dep_class(RealPropertyValue.DepClass.GDS_YEAR5_SL_MM)
-        self.equal(dt, DT(DT.DS.GDS, DT.PC.YEAR5, DT.DM.SL, DT.DC.MM))
+        dt = DT.from_dep_class(RealPropertyValue.DepClass.GDS_YEAR5_SL_HY)
+        self.equal(dt, DT(DT.DS.GDS, DT.PC.YEAR5, DT.DM.SL, DT.DC.HY))
 
     def test_depreciation_ratio_for_tax_year(self):
         DT = DepreciationType
@@ -73,5 +73,9 @@ class DepreciationTypeTests(TestCaseBase):
         dt = DT(DT.DS.GDS, DT.PC.YEAR5, DT.DM.SL, DT.DC.FM)
         cases_3_4_test(dt, datetime.date(1900, 1, 1), None, 1901, Decimal("0.200000000"))
         cases_3_4_test(dt, datetime.date(1900, 7, 15), None, 1900, Decimal("0.100000000"))
-        val = dt.depreciation_ratio_for_tax_year(datetime.date(1900, 7, 15), datetime.date(1903, 8, 20), 1903)
         cases_3_4_test(dt, datetime.date(1900, 7, 15), datetime.date(1903, 8, 20), 1903, Decimal("0.116666667"))
+
+        dt = DT(DT.DS.GDS, DT.PC.YEAR5, DT.DM.SL, DT.DC.HY)
+        cases_3_4_test(dt, datetime.date(1900, 1, 1), None, 1901, Decimal("0.2"))
+        cases_3_4_test(dt, datetime.date(1900, 7, 15), None, 1900, Decimal("0.1"))
+        cases_3_4_test(dt, datetime.date(1900, 7, 15), datetime.date(1903, 8, 20), 1903, Decimal("0.1"))

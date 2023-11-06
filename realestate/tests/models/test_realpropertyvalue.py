@@ -17,7 +17,7 @@ class RealPropertyValueTests(DjangoModelTestCaseBase):
         return RealPropertyValue.objects.get_or_create(
             real_estate=RealEstateTests.real_estate_10wlapt1(), item="test car",
             purchase_date=datetime.date(1905, 4, 10), cost_basis=Decimal("5.64"),
-            dep_class=RealPropertyValue.DepClass.GDS_YEAR5_SL_MM, disposal_date=None, notes="test notes rpv car")[0]
+            dep_class=RealPropertyValue.DepClass.GDS_YEAR5_SL_HY, disposal_date=None, notes="test notes rpv car")[0]
 
     @staticmethod
     def real_property_value_house():
