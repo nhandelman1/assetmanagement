@@ -40,7 +40,7 @@ class RealPropertyValue(models.Model):
         """
         NONE = "None-None-None-None", gettext_lazy("None-None-None-None")
         GDS_RRP_SL_MM = "GDS-RRP-SL-MM", gettext_lazy("GDS-RRP-SL-MM")
-        GDS_YEAR5_SL_MM = "GDS-YEAR5-SL-MM", gettext_lazy("GDS-YEAR5-SL-MM")
+        GDS_YEAR5_SL_HY = "GDS-YEAR5-SL-HY", gettext_lazy("GDS-YEAR5-SL-HY")
 
     real_estate = models.ForeignKey(RealEstate, models.PROTECT)
     item = models.CharField(max_length=100)
