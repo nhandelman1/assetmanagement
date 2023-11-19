@@ -35,8 +35,9 @@ class BaseModelForm(forms.ModelForm):
                 field.widget = forms.SelectDateWidget()
             elif isinstance(field, forms.FileField):
                 # request.POST has FileField relative path as a str but wont put relative path as the name of the file
+                # it may be the case that a field in the form is not in the model
                 if self.data is not None and field_name in self.data and self.instance is not None and \
-                        getattr(self.instance, field_name).name is None:
+                        hasattr(self.instance, field_name) and getattr(self.instance, field_name).name is None:
                     getattr(self.instance, field_name).name = self.data[field_name]
 
     def make_editable(self, read_only_fields=(), disable_read_only_fields=False):
