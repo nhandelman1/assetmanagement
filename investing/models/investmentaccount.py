@@ -4,18 +4,25 @@ from django.utils.translation import gettext_lazy
 
 class InvestmentAccountDataManager(models.Manager):
 
-    def account_id_to_account_dict(self, acc_id_list, broker):
-        """ Create dict of account id to account with that id
+    def field_to_account_dict(self, key_field, keys, broker):
+        """ Create dict of key_field to investment account with that key_field value
 
         Args:
-            acc_id_list (list[str]):
+            key_field (str): field of InvestmentAccount whose values are the return dict keys, if an InvestmentAccount
+                object with that value for key_field is found. one of "pk", "account_id"
+            keys (list[Union[int, str]]): e.g. [1, 2], ["Z123456789", "123456789"]
             broker (Broker):
 
         Returns:
-            dict: account id (keys) to account (values)
+            dict: key_field (keys) to InvestmentAccount object (values).  e.g. {1: inv acc 1}, {"123456789": inv acc 1}
+
+        Raises:
+            ValueError: if key_field is not one of "pk", "account_id"
         """
-        return {acc.account_id: acc for acc in InvestmentAccount.objects.filter(
-            account_id__in=acc_id_list, broker=broker)}
+        if key_field not in ("pk", "account_id"):
+            raise ValueError("key_field must be one of 'pk', 'account_id'")
+        d = {key_field + "__in": keys, "broker": broker}
+        return {getattr(sec, key_field): sec for sec in InvestmentAccount.objects.filter(**d)}
 
 
 class InvestmentAccount(models.Model):
@@ -41,7 +48,8 @@ class InvestmentAccount(models.Model):
     account_id = models.CharField(max_length=20)
     account_name = models.CharField(max_length=30)
     taxable = models.BooleanField()
-    create_date = models.DateField()
+    create_date = models.DateField(help_text="Be wary of changing this to a more recent date (will cause issues with "
+                                             "data including transactions, positions and others.")
 
     objects = InvestmentAccountDataManager()
 

@@ -2,6 +2,7 @@ from decimal import Decimal, InvalidOperation
 import datetime
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.db import IntegrityError, transaction
 
 from ...models.securitymaster import AssetClass, AssetSubClass, OptionType, SecurityMaster
 from util.djangomodeltestcasebase import DjangoModelTestCaseBase
@@ -40,6 +41,35 @@ class SecurityMasterTests(DjangoModelTestCaseBase):
         equity = AssetSubClass.get_class(AssetSubClass.COMMON_STOCK)
         self.assertEqual(equity, AssetClass.EQUITY)
 
+    def test_change_ticker(self):
+        # old ticker does not exist
+        with transaction.atomic():
+            with self.assertRaises(ObjectDoesNotExist):
+                SecurityMaster.objects.change_ticker("AAPL", "MSFT")
+
+        # new ticker already exists
+        aapl = SecurityMasterTests.sm_aapl()
+        SecurityMasterTests.sm_msft()
+        with transaction.atomic():
+            with self.assertRaises(IntegrityError):
+                SecurityMaster.objects.change_ticker("AAPL", "MSFT")
+
+        # no issues. my_id does not change but ticker changes
+        aapl_id = aapl.my_id
+        SecurityMaster.objects.change_ticker("AAPL", "NVDA")
+        sm = SecurityMaster.objects.get(ticker="NVDA")
+        self.assertEqual(sm.my_id, aapl_id)
+        self.assertEqual(sm.ticker, "NVDA")
+
+    def test_convert_asset_class(self):
+        sm_new = SecurityMaster.objects.convert_asset_class(
+            SecurityMasterTests.sm_nvda(), AssetClass.EQUITY, AssetSubClass.COMMON_STOCK)
+        sm_test = SecurityMasterTests.sm_nvda()
+        sm_test.my_id = "EQ_0000001"
+        sm_test.asset_class = AssetClass.EQUITY
+        sm_test.asset_subclass = AssetSubClass.COMMON_STOCK
+        self.simple_equal(sm_new, sm_test, SecurityMaster)
+
     def test_create_default(self):
         sm = SecurityMaster.objects.create_default("NVDA")
         self.equal(sm, SecurityMasterTests.sm_nvda())
@@ -51,14 +81,30 @@ class SecurityMasterTests(DjangoModelTestCaseBase):
         # test create default object. create default object then test equality to ensure it is a default object
         self.equal(SecurityMaster.objects.get_or_create_default("NVDA"), SecurityMasterTests.sm_nvda())
 
-    def test_convert_asset_class(self):
-        sm_new = SecurityMaster.objects.convert_asset_class(
-            SecurityMasterTests.sm_nvda(), AssetClass.EQUITY, AssetSubClass.COMMON_STOCK)
-        sm_test = SecurityMasterTests.sm_nvda()
-        sm_test.my_id = "EQ_0000001"
-        sm_test.asset_class = AssetClass.EQUITY
-        sm_test.asset_subclass = AssetSubClass.COMMON_STOCK
-        self.simple_equal(sm_new, sm_test, SecurityMaster)
+    def test_field_to_security_dict(self):
+        with self.assertRaises(ValueError):
+            SecurityMaster.objects.field_to_security_dict("fail", [])
+
+        sm1 = SecurityMasterTests.sm_aapl()
+        sm2 = SecurityMasterTests.sm_msft()
+
+        d = SecurityMaster.objects.field_to_security_dict("pk", [sm1.pk, sm2.pk])
+        with self.subTest():
+            self.assertEqual(list(d), [sm1.pk, sm2.pk])
+            self.equal(d[sm1.pk], sm1)
+            self.equal(d[sm2.pk], sm2)
+
+        d = SecurityMaster.objects.field_to_security_dict("my_id", [sm1.my_id, sm2.my_id])
+        with self.subTest():
+            self.assertEqual(list(d), [sm1.my_id, sm2.my_id])
+            self.equal(d[sm1.my_id], sm1)
+            self.equal(d[sm2.my_id], sm2)
+
+        d = SecurityMaster.objects.field_to_security_dict("ticker", [sm1.ticker, sm2.ticker])
+        with self.subTest():
+            self.assertEqual(list(d), [sm1.ticker, sm2.ticker])
+            self.equal(d[sm1.ticker], sm1)
+            self.equal(d[sm2.ticker], sm2)
 
     def test_my_id(self):
         # no validation error
@@ -131,17 +177,18 @@ class SecurityMasterTests(DjangoModelTestCaseBase):
             with self.assertRaises(ValueError):
                 SecurityMaster.get_option_data_from_ticker("MSFT220916D41.5")
 
-        # option type not found
+        # cant parse strike price
         with self.subTest():
             with self.assertRaises(InvalidOperation):
                 SecurityMaster.get_option_data_from_ticker("MSFT220916C41.5a")
 
-        underlying_security, exp_date, opt_type, strike_price = \
+        underlying_security, exp_date, opt_type, strike_price, contract_size = \
             SecurityMaster.get_option_data_from_ticker("AAPL220916C41.5")
         self.equal(underlying_security, aapl)
         self.assertEqual(exp_date, datetime.date(2022, 9, 16))
         self.assertEqual(opt_type, OptionType.AMERICAN_CALL)
         self.assertEqual(strike_price, Decimal("41.5"))
+        self.assertEqual(contract_size, 100)
 
     def test_save_clean(self):
         # no validation error
@@ -203,22 +250,11 @@ class SecurityMasterTests(DjangoModelTestCaseBase):
 
     @staticmethod
     def sm_aapl_call(create=True):
-        """
-            underlying_security = models.ForeignKey("self", on_delete=models.PROTECT, blank=True, null=True)
-    expiration_date = models.DateField(blank=True, null=True)
-    option_type = models.CharField(max_length=15, choices=OptionType.choices, blank=True, null=True)
-    strike_price = models.DecimalField(max_digits=8, decimal_places=2, blank=True, null=True)
-        Args:
-            create:
-
-        Returns:
-
-        """
         sm = (SecurityMaster.objects.get_or_create if create else SecurityMaster)(
             my_id="OP_0000001", ticker="AAPL220916C41.5", asset_class=AssetClass.OPTION,
             asset_subclass=AssetSubClass.EQUITY_OPTION, underlying_security=SecurityMasterTests.sm_aapl(),
             expiration_date=datetime.date(2022, 9, 16), option_type=OptionType.AMERICAN_CALL,
-            strike_price=Decimal("41.5"), has_fidelity_lots=True)
+            strike_price=Decimal("41.5"), contract_size=100, has_fidelity_lots=True)
         return sm[0] if create else sm
 
     @staticmethod
@@ -227,7 +263,7 @@ class SecurityMasterTests(DjangoModelTestCaseBase):
             my_id="OP_0000002", ticker="AAPL220916P37.5", asset_class=AssetClass.OPTION,
             asset_subclass=AssetSubClass.EQUITY_OPTION, underlying_security=SecurityMasterTests.sm_aapl(),
             expiration_date=datetime.date(2022, 9, 16), option_type=OptionType.AMERICAN_PUT,
-            strike_price=Decimal("37.5"), has_fidelity_lots=True)
+            strike_price=Decimal("37.5"), contract_size=100, has_fidelity_lots=True)
         return sm[0] if create else sm
 
     @staticmethod
@@ -255,7 +291,20 @@ class SecurityMasterTests(DjangoModelTestCaseBase):
                               asset_subclass=AssetSubClass.NOT_SET, has_fidelity_lots=True)
 
     @staticmethod
+    def sm_nvda_set(create=True):
+        sm = (SecurityMaster.objects.get_or_create if create else SecurityMaster)(
+            my_id="EQ_2000001", ticker="NVDA", asset_class=AssetClass.EQUITY,
+            asset_subclass=AssetSubClass.COMMON_STOCK, has_fidelity_lots=True)
+        return sm[0] if create else sm
+
+    @staticmethod
     def sm_spaxx(has_fidelity_lots=False):
         return SecurityMaster.objects.get_or_create(
             my_id="NS_0000001", ticker="SPAXX", asset_class=AssetClass.NOT_SET,
             asset_subclass=AssetSubClass.NOT_SET, has_fidelity_lots=has_fidelity_lots)[0]
+
+    @staticmethod
+    def sm_spaxx_set():
+        return SecurityMaster.objects.get_or_create(
+            my_id="MF_0000001", ticker="SPAXX", asset_class=AssetClass.MUTUAL_FUND,
+            asset_subclass=AssetSubClass.MONEY_MARKET, has_fidelity_lots=False)[0]

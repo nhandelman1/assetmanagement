@@ -50,6 +50,8 @@ class TransactionTests(DjangoModelTestCaseBase):
             trans.clean_fields()
 
     def test_load_transactions_from_fidelity_file(self):
+        self.maxDiff = None
+
         with self.subTest():
             # accounts not created
             with self.assertRaises(ObjectDoesNotExist):
@@ -61,12 +63,19 @@ class TransactionTests(DjangoModelTestCaseBase):
                 Transaction.load_transactions_from_file(Broker.FIDELITY, "test transactions distribution fail.csv")
 
         with self.subTest():
-            # DISTRIBUTION description but quantity is 0
+            # description does not match with transaction type and action type
             with self.assertRaises(ValueError):
                 Transaction.load_transactions_from_file(Broker.FIDELITY, "test transactions description fail.csv")
 
         inv_acc_fid_ind = InvestmentAccountTests.inv_acc_fidelity_individual()
         InvestmentAccountTests.inv_acc_fidelity_roth()
+
+        with self.subTest():
+            # earliest transaction is before account create date
+            with self.assertRaises(ValueError):
+                Transaction.load_transactions_from_file(
+                    Broker.FIDELITY, "test transactions before create date fail.csv")
+
         SecurityMasterTests.sm_aapl()
         SecurityMasterTests.sm_aapl_call()
         SecurityMasterTests.sm_aapl_put()
@@ -96,21 +105,31 @@ class TransactionTests(DjangoModelTestCaseBase):
         with self.subTest():
             self.equal(trans_list[9], TransactionTests.transaction_trade_buy_cover())
         with self.subTest():
-            self.equal(trans_list[10], TransactionTests.transaction_trade_sell_short())
+            self.equal(trans_list[10], TransactionTests.transaction_transfer_transferred_to())
         with self.subTest():
-            self.equal(trans_list[11], TransactionTests.transaction_transfer_transferred_to())
+            self.equal(trans_list[11], TransactionTests.transaction_corp_act_stock_split())
         with self.subTest():
-            self.equal(trans_list[12], TransactionTests.transaction_corp_act_stock_split())
+            self.equal(trans_list[12], TransactionTests.transaction_corp_act_stock_cons())
         with self.subTest():
-            self.equal(trans_list[13], TransactionTests.transaction_corp_act_stock_cons())
+            self.equal(trans_list[13], TransactionTests.transaction_transfer_rollover())
         with self.subTest():
-            self.equal(trans_list[14], TransactionTests.transaction_transfer_rollover())
+            self.equal(trans_list[14], TransactionTests.transaction_trade_sell_short())
         with self.subTest():
             self.equal(trans_list[15], TransactionTests.transaction_transfer_contrib_prior_year())
         with self.subTest():
             self.equal(trans_list[16], TransactionTests.transaction_transfer_transfer_of_assets_rescredit())
         with self.subTest():
             self.equal(trans_list[17], TransactionTests.transaction_transfer_transfer_of_assets_receive())
+        with self.subTest():
+            self.equal(trans_list[18], TransactionTests.transaction_transfer_security())
+        with self.subTest():
+            self.equal(trans_list[19], TransactionTests.transaction_corp_act_merger_old())
+        with self.subTest():
+            self.equal(trans_list[20], TransactionTests.transaction_corp_act_merger_new())
+        with self.subTest():
+            self.equal(trans_list[21], TransactionTests.transaction_other_loan_loan())
+        with self.subTest():
+            self.equal(trans_list[22], TransactionTests.transaction_other_loan_mark())
         with self.subTest():
             self.assertEqual(len(sec_ns_list), 1)
             SecurityMasterTests().equal(sec_ns_list[0], SecurityMasterTests.sm_spaxx(has_fidelity_lots=True))
@@ -135,40 +154,73 @@ class TransactionTests(DjangoModelTestCaseBase):
             investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(), trans_date=datetime.date(2023, 9, 27),
             trans_type=TransactionType.CORP_ACT, action_type=ActionType.DIV, description="DIVIDEND RECEIVED",
             security=SecurityMasterTests.sm_aapl(), quantity=Decimal(0), price=Decimal(0),
-            amount=Decimal("70.94"), commission=Decimal(0), fees=Decimal(0))
+            amount_net=Decimal("70.94"), commission=Decimal(0), fees=Decimal(0))
+
+    @staticmethod
+    def transaction_corp_act_merger_new():
+        return Transaction(
+            investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(), trans_date=datetime.date(2022, 9, 6),
+            trans_type=TransactionType.CORP_ACT, action_type=ActionType.MERGER_NEW,
+            description="MERGER MER FROM MSFT#REOR M0051542700001", security=SecurityMasterTests.sm_aapl(),
+            quantity=Decimal(100), price=Decimal(0), amount_net=Decimal(0), commission=Decimal(0), fees=Decimal(0))
+
+    @staticmethod
+    def transaction_corp_act_merger_old():
+        return Transaction(
+            investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(), trans_date=datetime.date(2022, 9, 6),
+            trans_type=TransactionType.CORP_ACT, action_type=ActionType.MERGER_OLD,
+            description="MERGER MER PAYOUT #REOR M0051542700000", security=SecurityMasterTests.sm_msft(),
+            quantity=Decimal(-100), price=Decimal(0), amount_net=Decimal(0), commission=Decimal(0), fees=Decimal(0))
 
     @staticmethod
     def transaction_corp_act_stock_cons():
         return Transaction(
-            investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(), trans_date=datetime.date(2022, 1, 13),
+            investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(), trans_date=datetime.date(2022, 9, 9),
             trans_type=TransactionType.CORP_ACT, action_type=ActionType.STOCK_CONS, description="DISTRIBUTION",
-            security=SecurityMasterTests.sm_aapl(), quantity=Decimal("-5.00"), price=Decimal(0), amount=Decimal(0),
+            security=SecurityMasterTests.sm_aapl(), quantity=Decimal("-5.00"), price=Decimal(0), amount_net=Decimal(0),
             commission=Decimal(0), fees=Decimal(0))
 
     @staticmethod
     def transaction_corp_act_stock_split():
         return Transaction(
-            investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(), trans_date=datetime.date(2022, 1, 13),
+            investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(), trans_date=datetime.date(2022, 9, 9),
             trans_type=TransactionType.CORP_ACT, action_type=ActionType.STOCK_SPLIT, description="DISTRIBUTION",
-            security=SecurityMasterTests.sm_aapl(), quantity=Decimal("7.00"), price=Decimal(0), amount=Decimal(0),
+            security=SecurityMasterTests.sm_aapl(), quantity=Decimal("7.00"), price=Decimal(0), amount_net=Decimal(0),
             commission=Decimal(0), fees=Decimal(0))
 
     @staticmethod
     def transaction_other_expired_call():
+        # transaction in file is 2022-09-19 but the program changes it to 2022-09-16 to match expiry
         return Transaction(
-            investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(), trans_date=datetime.date(2022, 9, 19),
+            investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(), trans_date=datetime.date(2022, 9, 16),
             trans_type=TransactionType.OTHER, action_type=ActionType.OPT_EXP,
             description="EXPIRED CALL (AAPL) PROSHARES ULTRAPRO SEP 16 22 $41.5",
-            security=SecurityMasterTests.sm_aapl_call(), quantity=Decimal("12.00"), price=Decimal(0), amount=Decimal(0),
-            commission=Decimal(0), fees=Decimal(0))
+            security=SecurityMasterTests.sm_aapl_call(), quantity=Decimal("12.00"), price=Decimal(0),
+            amount_net=Decimal(0), commission=Decimal(0), fees=Decimal(0))
+
+    @staticmethod
+    def transaction_other_loan_loan():
+        return Transaction(
+            investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(), trans_date=datetime.date(2022, 9, 6),
+            trans_type=TransactionType.OTHER, action_type=ActionType.LOAN, description="YOU LOANED VS Z21-323368-1",
+            security=SecurityMasterTests.sm_aapl(), quantity=Decimal("107"), price=Decimal(0),
+            amount_net=Decimal(0), commission=Decimal(0), fees=Decimal(0))
+
+    @staticmethod
+    def transaction_other_loan_mark():
+        return Transaction(
+            investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(), trans_date=datetime.date(2022, 9, 6),
+            trans_type=TransactionType.OTHER, action_type=ActionType.LOAN,
+            description="INCREASE COLLATERAL MARK TO MARKET ADJ", security=SecurityMasterTests.sm_aapl(),
+            quantity=Decimal("13033"), price=Decimal(0), amount_net=Decimal(0), commission=Decimal(0), fees=Decimal(0))
 
     @staticmethod
     def transaction_trade_buy():
         return Transaction(
             investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(), trans_date=datetime.date(2023, 2, 21),
             trans_type=TransactionType.TRADE, action_type=ActionType.BUY, description="YOU BOUGHT",
-            security=SecurityMasterTests.sm_aapl(), quantity=Decimal("21.00"), price=Decimal("36.29"),
-            amount=Decimal("-762.17"), commission=Decimal(0), fees=Decimal(0))
+            security=SecurityMasterTests.sm_aapl(), quantity=Decimal("21.00"), price=Decimal("36.2936"),
+            amount_net=Decimal("-762.17"), commission=Decimal(0), fees=Decimal(0))
 
     @staticmethod
     def transaction_trade_buy_cover():
@@ -177,7 +229,7 @@ class TransactionTests(DjangoModelTestCaseBase):
             trans_type=TransactionType.TRADE, action_type=ActionType.BUY_COVER,
             description="YOU BOUGHT CLOSING TRANSACTION",
             security=SecurityMasterTests.sm_aapl_put(), quantity=Decimal("14.00"), price=Decimal("0.11"),
-            amount=Decimal("-154.41"), commission=Decimal(0), fees=Decimal("0.41"))
+            amount_net=Decimal("-154.41"), commission=Decimal(0), fees=Decimal("0.41"))
 
     @staticmethod
     def transaction_trade_reinvestment():
@@ -185,7 +237,7 @@ class TransactionTests(DjangoModelTestCaseBase):
             investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(), trans_date=datetime.date(2023, 9, 29),
             trans_type=TransactionType.TRADE, action_type=ActionType.BUY, description="REINVESTMENT REINVEST @ $1.000",
             security=SecurityMasterTests.sm_spaxx(has_fidelity_lots=True), quantity=Decimal("1.28"), price=Decimal(1),
-            amount=Decimal("-1.28"), commission=Decimal(0), fees=Decimal(0))
+            amount_net=Decimal("-1.28"), commission=Decimal(0), fees=Decimal(0))
 
     @staticmethod
     def transaction_trade_sell():
@@ -193,7 +245,7 @@ class TransactionTests(DjangoModelTestCaseBase):
             investment_account=InvestmentAccountTests.inv_acc_fidelity_individual(),
             trans_date=datetime.date(2023, 6, 30), trans_type=TransactionType.TRADE, action_type=ActionType.SELL,
             description="YOU SOLD", security=SecurityMasterTests.sm_msft(), quantity=Decimal("-74.00"),
-            price=Decimal("89.75"), amount=Decimal("6641.44"), commission=Decimal(0), fees=Decimal("0.06"))
+            price=Decimal("89.75"), amount_net=Decimal("6641.44"), commission=Decimal(0), fees=Decimal("0.06"))
 
     @staticmethod
     def transaction_trade_sell_short():
@@ -201,7 +253,7 @@ class TransactionTests(DjangoModelTestCaseBase):
             investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(), trans_date=datetime.date(2022, 9, 8),
             trans_type=TransactionType.TRADE, action_type=ActionType.SELL_SHORT,
             description="YOU SOLD OPENING TRANSACTION", security=SecurityMasterTests.sm_aapl_put(),
-            quantity=Decimal("-14.00"), price=Decimal("0.70"), amount=Decimal("970.46"), commission=Decimal("9.1"),
+            quantity=Decimal("-14.00"), price=Decimal("0.70"), amount_net=Decimal("970.46"), commission=Decimal("9.1"),
             fees=Decimal("0.44"))
 
     @staticmethod
@@ -210,15 +262,15 @@ class TransactionTests(DjangoModelTestCaseBase):
             investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(), trans_date=datetime.date(2023, 1, 30),
             trans_type=TransactionType.TRANSFER, action_type=ActionType.TRANSFER,
             description="CONTRIB CURRENT YR CASH CONTRB CURR YR ER46855432 /WEB", security=None, quantity=Decimal(0),
-            price=Decimal(0), amount=Decimal("560.00"), commission=Decimal(0), fees=Decimal(0))
+            price=Decimal(0), amount_net=Decimal("560.00"), commission=Decimal(0), fees=Decimal(0))
 
     @staticmethod
     def transaction_transfer_contrib_prior_year():
         return Transaction(
-            investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(), trans_date=datetime.date(2021, 2, 24),
+            investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(), trans_date=datetime.date(2022, 9, 8),
             trans_type=TransactionType.TRANSFER, action_type=ActionType.TRANSFER,
             description="CONTRIB PRIOR YEAR CASH CONTRIB PRIOR YER70674865 /WEB", security=None, quantity=Decimal(0),
-            price=Decimal(0), amount=Decimal("6000.00"), commission=Decimal(0), fees=Decimal(0))
+            price=Decimal(0), amount_net=Decimal("6000.00"), commission=Decimal(0), fees=Decimal(0))
 
     @staticmethod
     def transaction_transfer_money_line_paid():
@@ -226,7 +278,7 @@ class TransactionTests(DjangoModelTestCaseBase):
             investment_account=InvestmentAccountTests.inv_acc_fidelity_individual(),
             trans_date=datetime.date(2023, 8, 28), trans_type=TransactionType.TRANSFER, action_type=ActionType.TRANSFER,
             description="MONEY LINE PAID EFT FUNDS PAID ED07172945 /WEB", security=None, quantity=Decimal(0),
-            price=Decimal(0), amount=Decimal("-3000.00"), commission=Decimal(0), fees=Decimal(0))
+            price=Decimal(0), amount_net=Decimal("-3000.00"), commission=Decimal(0), fees=Decimal(0))
 
     @staticmethod
     def transaction_transfer_money_line_received():
@@ -234,39 +286,48 @@ class TransactionTests(DjangoModelTestCaseBase):
             investment_account=InvestmentAccountTests.inv_acc_fidelity_individual(),
             trans_date=datetime.date(2023, 1, 31), trans_type=TransactionType.TRANSFER, action_type=ActionType.TRANSFER,
             description="MONEY LINE RECEIVED EFT FUNDS RECEIVED ER47281080 /WEB", security=None, quantity=Decimal(0),
-            price=Decimal(0), amount=Decimal("25.00"), commission=Decimal(0), fees=Decimal(0))
+            price=Decimal(0), amount_net=Decimal("25.00"), commission=Decimal(0), fees=Decimal(0))
 
     @staticmethod
     def transaction_transfer_rollover():
         return Transaction(
-            investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(), trans_date=datetime.date(2021, 5, 14),
+            investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(), trans_date=datetime.date(2022, 9, 9),
             trans_type=TransactionType.TRANSFER, action_type=ActionType.TRANSFER,
             description="ROLLOVER CASH DIRECT ROLLOVER FROM FIRSCO PLAN 38452 HARBOR FINANCIAL", security=None,
-            quantity=Decimal(0), price=Decimal(0), amount=Decimal("1042.27"), commission=Decimal(0), fees=Decimal(0))
+            quantity=Decimal(0), price=Decimal(0), amount_net=Decimal("1042.27"), commission=Decimal(0),
+            fees=Decimal(0))
+
+    @staticmethod
+    def transaction_transfer_security():
+        return Transaction(
+            investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(),
+            trans_date=datetime.date(2022, 9, 6), trans_type=TransactionType.TRANSFER,
+            action_type=ActionType.TRANSFER, description="RECEIVED FROM YOU", security=SecurityMasterTests.sm_aapl(),
+            quantity=Decimal(100), price=Decimal(0), amount_net=Decimal(0), commission=Decimal(0), fees=Decimal(0))
 
     @staticmethod
     def transaction_transfer_transferred_to():
         return Transaction(
             investment_account=InvestmentAccountTests.inv_acc_fidelity_individual(),
-            trans_date=datetime.date(2022, 5, 3), trans_type=TransactionType.TRANSFER, action_type=ActionType.TRANSFER,
+            trans_date=datetime.date(2022, 9, 12), trans_type=TransactionType.TRANSFER, action_type=ActionType.TRANSFER,
             description="TRANSFERRED TO VS 237-198406-1 CURRENT CONTRIBUTION", security=None, quantity=Decimal(0),
-            price=Decimal(0), amount=Decimal("-4000.00"), commission=Decimal(0), fees=Decimal(0))
+            price=Decimal(0), amount_net=Decimal("-4000.00"), commission=Decimal(0), fees=Decimal(0))
 
     @staticmethod
     def transaction_transfer_transfer_of_assets_receive():
         return Transaction(
-            investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(), trans_date=datetime.date(2020, 3, 9),
+            investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(), trans_date=datetime.date(2022, 9, 6),
             trans_type=TransactionType.TRANSFER, action_type=ActionType.TRANSFER,
             description="TRANSFER OF ASSETS ACAT RECEIVE", security=None, quantity=Decimal(0), price=Decimal(0),
-            amount=Decimal("32360.42"), commission=Decimal(0), fees=Decimal(0))
+            amount_net=Decimal("32360.42"), commission=Decimal(0), fees=Decimal(0))
 
     @staticmethod
     def transaction_transfer_transfer_of_assets_rescredit():
         return Transaction(
-            investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(), trans_date=datetime.date(2020, 3, 11),
+            investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(), trans_date=datetime.date(2022, 9, 7),
             trans_type=TransactionType.TRANSFER, action_type=ActionType.TRANSFER,
             description="TRANSFER OF ASSETS ACAT RES.CREDIT", security=None, quantity=Decimal(0), price=Decimal(0),
-            amount=Decimal("2.49"), commission=Decimal(0), fees=Decimal(0))
+            amount_net=Decimal("2.49"), commission=Decimal(0), fees=Decimal(0))
 
     @staticmethod
     def transaction_transfer_wire_transfer():
@@ -274,4 +335,5 @@ class TransactionTests(DjangoModelTestCaseBase):
             investment_account=InvestmentAccountTests.inv_acc_fidelity_individual(),
             trans_date=datetime.date(2023, 10, 27), trans_type=TransactionType.TRANSFER,
             action_type=ActionType.TRANSFER, description="WIRE TRANS FROM BANK WR45932686", security=None,
-            quantity=Decimal(0), price=Decimal(0), amount=Decimal("3056.87"), commission=Decimal(0), fees=Decimal(0))
+            quantity=Decimal(0), price=Decimal(0), amount_net=Decimal("3056.87"), commission=Decimal(0),
+            fees=Decimal(0))

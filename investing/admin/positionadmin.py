@@ -8,10 +8,10 @@ class PositionAdmin(admin.ModelAdmin):
 
     fieldsets = [
         ("Position Information", {"fields": ["investment_account", "security", "quantity", "enter_date",
-                                                "cost_basis_price", "cost_basis_total"]}),
-        ("End of Day Information", {"fields": ["eod_date", "close_price", "market_value"]})]
+                                             "cost_basis_price", "cost_basis_total"]}),
+        ("End of Day Information", {"fields": ["eod_date", "eod_price", "market_value"]})]
     list_display = ["get_broker", "get_account_name", "eod_date", "get_security_ticker", "get_security_asset_class",
-                    "quantity", "close_price", "market_value", "enter_date", "cost_basis_price", "cost_basis_total"]
+                    "quantity", "eod_price", "market_value", "enter_date", "cost_basis_price", "cost_basis_total"]
     list_filter = ["investment_account__broker", "investment_account__account_name", "eod_date", "enter_date"]
     search_fields = ["security__ticker", "eod_date", "enter_date"]
 

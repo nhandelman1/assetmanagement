@@ -1,4 +1,5 @@
 from decimal import Decimal, InvalidOperation
+from typing import Union
 import datetime
 
 from django.core.exceptions import ObjectDoesNotExist
@@ -8,6 +9,42 @@ from django.utils.translation import gettext_lazy
 
 
 class SecurityMasterDataManager(models.Manager):
+
+    def change_ticker(self, old_ticker, new_ticker):
+        """ Change old ticker to new ticker
+
+        Args:
+            old_ticker (str):
+            new_ticker (str):
+
+        Raises:
+            Union[IntegrityError, ObjectDoesNotExist]: IntegrityError if a SecurityMaster with new_ticker exists,
+                ObjectDoesNotExist if SecurityMaster with old_ticker does not exist
+        """
+        sm = SecurityMaster.objects.get(ticker=old_ticker)
+        sm.ticker = new_ticker
+        sm.save()
+
+    def convert_asset_class(self, security_master, asset_class, asset_subclass):
+        """ Convert existing SecurityMaster object to another AssetClass or AssetSubClass
+
+        ticker does not change. my_id changes if asset_class changes.
+
+        Args:
+            security_master (SecurityMaster): existing SecurityMaster object
+            asset_class (AssetClass): convert to this AssetClass
+            asset_subclass (AssetSubClass): convert to this AssetSubClass
+
+        Returns:
+            SecurityMaster: converted and saved SecurityMaster object
+        """
+        if asset_class != security_master.asset_class:
+            new_my_id = SecurityMaster.generate_my_id(asset_class)
+            security_master.my_id = new_my_id
+            security_master.asset_class = asset_class
+        security_master.asset_subclass = asset_subclass
+        security_master.save()
+        return security_master
 
     def create_default(self, ticker, has_fidelity_lots=True):
         """ Create default SecurityMaster object with provided ticker
@@ -45,37 +82,25 @@ class SecurityMasterDataManager(models.Manager):
         except ObjectDoesNotExist:
             return self.create_default(ticker, has_fidelity_lots=has_fidelity_lots)
 
-    def convert_asset_class(self, security_master, asset_class, asset_subclass):
-        """ Convert existing SecurityMaster object to another AssetClass or AssetSubClass
-
-        ticker does not change. my_id changes if asset_class changes.
+    def field_to_security_dict(self, key_field, keys):
+        """ Create dict of key_field to security with that key_field value
 
         Args:
-            security_master (SecurityMaster): existing SecurityMaster object
-            asset_class (AssetClass): convert to this AssetClass
-            asset_subclass (AssetSubClass): convert to this AssetSubClass
+            key_field (str): field of SecurityMaster whose values are the return dict keys, if a SecurityMaster object
+                with that value for key_field is found. one of "pk", "my_id", "ticker"
+            keys (list[Union[int, str]]): e.g. [1, 2], ["EQ_0000001", "OP_0000001"], ["AAPL", "MSFT"]
 
         Returns:
-            SecurityMaster: converted and saved SecurityMaster object
+            dict: key_field (keys) to SecurityMaster object (values).
+                e.g. {1: AAPL object}, {"EQ_0000001": AAPL object}, {"AAPL": AAPL object},
+
+        Raises:
+            ValueError: if key_field is not one of "pk", "my_id", "ticker"
         """
-        if asset_class != security_master.asset_class:
-            new_my_id = SecurityMaster.generate_my_id(asset_class)
-            security_master.my_id = new_my_id
-            security_master.asset_class = asset_class
-        security_master.asset_subclass = asset_subclass
-        security_master.save()
-        return security_master
-
-    def ticker_to_security_dict(self, ticker_list):
-        """ Create dict of ticker to security with that id
-
-        Args:
-            ticker_list (list[str]):
-
-        Returns:
-            dict: ticker (keys) to security (values)
-        """
-        return {sec.ticker: sec for sec in SecurityMaster.objects.filter(ticker__in=ticker_list)}
+        if key_field not in ("pk", "my_id", "ticker"):
+            raise ValueError("key_field must be one of 'pk', 'my_id', 'ticker'")
+        d = {key_field + "__in": keys}
+        return {getattr(sec, key_field): sec for sec in SecurityMaster.objects.filter(**d)}
 
 
 class SecurityMaster(models.Model):
@@ -91,6 +116,8 @@ class SecurityMaster(models.Model):
         expiration_date (datetime.date): required for options but other asset classes are optional
         option_type (OptionType): required for options but other asset classes are optional
         strike_price (Decimal): required for options but other asset classes are optional
+        contract_size (int): required for options but other asset classes are optional. number of underlying securities
+            covered by derivatives contract.
         has_fidelity_lots (boolean): True if broker FIDELITY breaks a Position in this security into lots. False if
             it does not. Default True
     """
@@ -249,6 +276,7 @@ class SecurityMaster(models.Model):
     expiration_date = models.DateField(blank=True, null=True)
     option_type = models.CharField(max_length=15, choices=OptionType.choices, blank=True, null=True)
     strike_price = models.DecimalField(max_digits=8, decimal_places=2, blank=True, null=True)
+    contract_size = models.PositiveIntegerField(blank=True, null=True)
     has_fidelity_lots = models.BooleanField(default=True)
 
     objects = SecurityMasterDataManager()
@@ -295,9 +323,9 @@ class SecurityMaster(models.Model):
     def _validate_option_data(self):
         if AssetClass(self.asset_class) == AssetClass.OPTION and \
                 (self.underlying_security is None or self.expiration_date is None or self.option_type is None or
-                 self.strike_price is None):
-            raise ValidationError("Options must have fields: 'underlying security', 'expiration date', 'option type'"
-                                  " and 'strike price' set.")
+                 self.strike_price is None or self.contract_size is None):
+            raise ValidationError("Options must have fields: 'underlying security', 'expiration date', 'option type',"
+                                  " 'strike price' and 'contract_size' set.")
 
     @classmethod
     def generate_my_id(cls, asset_class):
@@ -319,10 +347,10 @@ class SecurityMaster(models.Model):
 
     @classmethod
     def get_option_data_from_ticker(cls, ticker):
-        """ Get underlying security, expiration date, option type and strike price from ticker
+        """ Get underlying security, expiration date, option type, strike price and contract size from ticker
 
         This function assumes all options are American Call or American Put and assumes the ticker is in Fidelity
-        format. Will need to update if either of these assumptions are wrong.
+        format and assumes contract size is 100. Will need to update if any of these assumptions are wrong.
 
         Args:
             ticker (str): option ticker expected to have Fidelity format: underlyingtickerYYMMDD[C,P]strikeprice
@@ -333,8 +361,8 @@ class SecurityMaster(models.Model):
                 e.g. AAPL220916C41.5, MSFT220916P325
 
         Returns:
-            tuple[SecurityMaster, datetime.date, OptionType, Decimal]: underlying security, expiration date,
-                option type, strike price
+            tuple[SecurityMaster, datetime.date, OptionType, Decimal, int]: underlying security, expiration date,
+                option type, strike price, contract size
 
         Raises:
             InvalidOperation: if strike price in ticker does not convert to a Decimal
@@ -357,7 +385,7 @@ class SecurityMaster(models.Model):
         exp_date = datetime.date(int("20" + exp_date[:2]), int(exp_date[2:4]), int(exp_date[4:]))
         opt_type = OptionType.AMERICAN_CALL if ticker[cp_ind] == "C" else OptionType.AMERICAN_PUT
         strike_price = Decimal(ticker[cp_ind+1:])
-        return underlying_security, exp_date, opt_type, strike_price
+        return underlying_security, exp_date, opt_type, strike_price, 100
 
     @staticmethod
     def validate_my_id_partial(my_id):
@@ -366,6 +394,36 @@ class SecurityMaster(models.Model):
                                "all characters after '_' must be digits 0-9.")(my_id)
 
 
+class TickerHistory(models.Model):
+    """ Ticker History
+
+    Track ticker changes due to merger, ticker change, etc.
+
+    Attributes:
+        security (SecurityMaster): object on which the change happened. note that it is possible that after subsequent
+            changes, the ticker on this object might not be new_ticker
+        new_ticker (str): ticker being changed to
+        old_ticker (str): ticker being changed from
+        change_date (datetime.date): date on which the change happened
+        change_type (ChangeType):
+    """
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["security", "change_date", "change_type"],
+                                    name="unique_%(app_label)s_%(class)s_sm_cd_ct"),
+        ]
+
+    class ChangeType(models.TextChoices):
+        MERGER = "MERGER", gettext_lazy("Merger")
+
+    security = models.ForeignKey(SecurityMaster, on_delete=models.PROTECT)
+    new_ticker = models.CharField(max_length=30)
+    old_ticker = models.CharField(max_length=30)
+    change_date = models.DateField()
+    change_type = models.CharField(max_length=11, choices=ChangeType.choices)
+
+
 AssetClass = SecurityMaster.AssetClass
 AssetSubClass = SecurityMaster.AssetSubClass
+ChangeType = TickerHistory.ChangeType
 OptionType = SecurityMaster.OptionType

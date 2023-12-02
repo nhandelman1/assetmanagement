@@ -3,7 +3,7 @@ from django.contrib import admin
 
 class TransactionAdmin(admin.ModelAdmin):
     list_display = ["get_broker", "get_account_name", "trans_date", "trans_type", "action_type", "get_security_ticker",
-                    "quantity", "price", "amount"]
+                    "quantity", "price", "amount_net"]
     list_filter = ["investment_account__broker", "investment_account__account_name", "trans_date", "trans_type",
                    "action_type"]
     search_fields = ["security__ticker", "trans_date", "description"]

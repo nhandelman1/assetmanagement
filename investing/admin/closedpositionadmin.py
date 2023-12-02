@@ -3,10 +3,11 @@ from django.contrib import admin
 
 class ClosedPositionAdmin(admin.ModelAdmin):
     fieldsets = [
-        ("Position Information", {"fields": ["investment_account", "security", "quantity"]}),
-        ("Basis Information", {"fields": ["enter_date", "cost_basis_price", "cost_basis_total",
-                                          "cost_basis_price_unadj", "cost_basis_total_unadj"]}),
-        ("Proceeds Information", {"fields": ["close_date", "proceeds_price", "proceeds_total"]}),
+        ("Position Information", {"fields": ["investment_account", "security", "quantity", "enter_date",
+                                             "enter_price_net", "close_date", "close_price_net"]}),
+        ("Basis Information", {"fields": ["cost_basis_price", "cost_basis_total", "cost_basis_price_unadj",
+                                          "cost_basis_total_unadj"]}),
+        ("Proceeds Information", {"fields": ["proceeds_price", "proceeds_total"]}),
         ("PnL Information", {"fields": ["short_term_pnl", "long_term_pnl", "short_term_pnl_unadj",
                                         "long_term_pnl_unadj"]})]
     list_display = ["get_broker", "get_account_name", "get_security_ticker", "get_security_asset_class",
