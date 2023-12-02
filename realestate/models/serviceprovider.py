@@ -37,6 +37,7 @@ class ServiceProvider(models.Model):
         PSEG_UTI = "PSEG-UTI", gettext_lazy("PSEG-UTI")
         SCWA_UTI = "SCWA-UTI", gettext_lazy("SCWA-UTI")
         SC_TAX = "SuffolkCounty-TAX", gettext_lazy("SuffolkCounty-TAX")
+        TPHS_REP = "TaylorProsHomeServices-REP", gettext_lazy("TaylorProsHomeServices-REP")
         WMT_SUP = "Walmart-SUP", gettext_lazy("Walmart-SUP")
         WL_10_APT_TEN_INC = "10WagonLnAptTenant-INC", gettext_lazy("10WagonLnAptTenant-INC")
         WL_10_SP = "10WagonLnSunpower", gettext_lazy("10WagonLnSunpower")
