@@ -22,7 +22,7 @@ class PositionAdminForm(forms.ModelForm):
     def clean(self):
         """ Override clean to calculate market_value and cost_basis_total if not set """
         cd = super().clean()  # super returns self.cleaned_data
-        for total, price in (("market_value", "close_price"), ("cost_basis_total", "cost_basis_price")):
+        for total, price in (("market_value", "eod_price"), ("cost_basis_total", "cost_basis_price")):
             if cd[total] is None:
                 if all([x in cd for x in ["quantity", price]]):
                     cd[total] = round(cd["quantity"] * cd[price], self.fields[total].decimal_places)
@@ -36,7 +36,8 @@ class SecurityMasterAdminForm(forms.ModelForm):
         model = SecurityMaster
         opt_str = "For " + str(SecurityMaster.AssetClass.OPTION) + ": leave blank to infer this field from ticker."
         help_texts = {"my_id": "auto populated - not editable", "underlying_security": opt_str,
-                      "expiration_date": opt_str, "option_type": opt_str, "strike_price": opt_str}
+                      "expiration_date": opt_str, "option_type": opt_str, "strike_price": opt_str,
+                      "contract_size": opt_str}
         fields = "__all__"
 
     def __init__(self, *args, **kwargs):
@@ -54,7 +55,7 @@ class SecurityMasterAdminForm(forms.ModelForm):
         if len(self.initial) == 0 or self.initial["asset_class"] != cd["asset_class"]:
             cd["my_id"] = SecurityMaster.generate_my_id(cd["asset_class"])
         if cd["asset_class"] == SecurityMaster.AssetClass.OPTION.label:
-            fld_list = ["underlying_security", "expiration_date", "option_type", "strike_price"]
+            fld_list = ["underlying_security", "expiration_date", "option_type", "strike_price", "contract_size"]
             if any([cd[x] is None for x in fld_list]):
                 try:
                     val_list = list(SecurityMaster.get_option_data_from_ticker(cd["ticker"]))

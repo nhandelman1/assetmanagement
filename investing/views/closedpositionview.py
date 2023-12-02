@@ -28,10 +28,11 @@ def closed_position_file_upload(request):
                              for x in exist_inv_acc_dates_set],
                             key=lambda x: (x["broker"], x["account_name"], x["date"]))
         pos_list = [(x.investment_account.broker, x.investment_account.account_name, str(x.enter_date),
-                     str(x.close_date), x.security.ticker, str(x.quantity), str(x.cost_basis_price),
-                     str(x.cost_basis_total), str(x.proceeds_price), str(x.proceeds_total), str(x.short_term_pnl),
-                     str(x.long_term_pnl), str(x.cost_basis_price_unadj), str(x.cost_basis_total_unadj),
-                     str(x.short_term_pnl_unadj), str(x.long_term_pnl_unadj)) for x in pos_list]
+                     str(x.close_date), x.security.ticker, str(x.quantity), str(x.enter_price_net),
+                     str(x.close_price_net), str(x.cost_basis_price), str(x.cost_basis_total), str(x.proceeds_price),
+                     str(x.proceeds_total), str(x.short_term_pnl), str(x.long_term_pnl), str(x.cost_basis_price_unadj),
+                     str(x.cost_basis_total_unadj), str(x.short_term_pnl_unadj), str(x.long_term_pnl_unadj))
+                    for x in pos_list]
         return render(request, "investing/closedposition/closedpositionfileuploadsuccess.html",
                       context={"sec_ns_str": sec_ns_str, "eiacd_list": eiacd_list, "pos_list": pos_list})
     else:

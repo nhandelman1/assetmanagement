@@ -29,8 +29,8 @@ def transaction_file_upload(request):
                             key=lambda x: (x["broker"], x["account_name"], x["date"]))
         trans_list = [(x.investment_account.broker, x.investment_account.account_name, str(x.trans_date),
                        str(x.trans_type), str(x.action_type), x.description,
-                       "" if x.security is None else x.security.ticker, str(x.quantity), str(x.price), str(x.amount),
-                       str(x.commission), str(x.fees)) for x in trans_list]
+                       "" if x.security is None else x.security.ticker, str(x.quantity), str(x.price),
+                       str(x.amount_net), str(x.commission), str(x.fees)) for x in trans_list]
         return render(request, "investing/transaction/transactionfileuploadsuccess.html",
                       context={"sec_ns_str": sec_ns_str, "eiacd_list": eiacd_list, "trans_list": trans_list})
     else:

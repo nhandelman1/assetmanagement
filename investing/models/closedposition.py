@@ -13,10 +13,10 @@ from ..models.securitymaster import SecurityMaster
 
 
 class ClosedPositionManager(models.Manager):
-    def full_constructor(self, investment_account, enter_date, close_date, security, quantity, cost_basis_price,
-                         cost_basis_total, proceeds_price, proceeds_total, short_term_pnl, long_term_pnl,
-                         cost_basis_price_unadj, cost_basis_total_unadj, short_term_pnl_unadj, long_term_pnl_unadj,
-                         create=True):
+    def full_constructor(self, investment_account, enter_date, close_date, security, quantity, enter_price_net,
+                         close_price_net, cost_basis_price, cost_basis_total, proceeds_price, proceeds_total,
+                         short_term_pnl, long_term_pnl, cost_basis_price_unadj, cost_basis_total_unadj,
+                         short_term_pnl_unadj, long_term_pnl_unadj, create=True):
         """ Instantiate ClosedPosition instance with option to save to database
 
         Args:
@@ -28,11 +28,11 @@ class ClosedPositionManager(models.Manager):
         """
         return (self.create if create else ClosedPosition)(
             investment_account=investment_account, enter_date=enter_date, close_date=close_date, security=security,
-            quantity=quantity, cost_basis_price=cost_basis_price, cost_basis_total=cost_basis_total,
-            proceeds_price=proceeds_price, proceeds_total=proceeds_total, short_term_pnl=short_term_pnl,
-            long_term_pnl=long_term_pnl, cost_basis_price_unadj=cost_basis_price_unadj,
-            cost_basis_total_unadj=cost_basis_total_unadj, short_term_pnl_unadj=short_term_pnl_unadj,
-            long_term_pnl_unadj=long_term_pnl_unadj)
+            quantity=quantity, enter_price_net=enter_price_net, close_price_net=close_price_net,
+            cost_basis_price=cost_basis_price, cost_basis_total=cost_basis_total, proceeds_price=proceeds_price,
+            proceeds_total=proceeds_total, short_term_pnl=short_term_pnl, long_term_pnl=long_term_pnl,
+            cost_basis_price_unadj=cost_basis_price_unadj, cost_basis_total_unadj=cost_basis_total_unadj,
+            short_term_pnl_unadj=short_term_pnl_unadj, long_term_pnl_unadj=long_term_pnl_unadj)
 
 
 class ClosedPosition(models.Model):
@@ -46,10 +46,16 @@ class ClosedPosition(models.Model):
         close_date (datetime.date): date this lot position was closed
         security (SecurityMaster):
         quantity (Decimal): can have partial shares
-        cost_basis_price (Decimal): cost basis price after wash sale adjustment
-        cost_basis_total (Decimal): cost basis total after wash sale adjustment
-        proceeds_price (Decimal): price at close of position
-        proceeds_total (Decimal): proceeds at close of position
+        enter_price_net (Decimal): price the position was entered into at before wash sale adjustment but after
+            entering commission and fees. for long positions, this is cost_basis_price_unadj. for short_positions, this
+            is proceeds_price
+        close_price_net (Decimal): price the position was closed at before wash sale adjustment but after closing
+            commission and fees. for long positions, this is proceeds_price. for short_positions, this is
+            cost_basis_price_unadj.
+        cost_basis_price (Decimal): cost basis price after wash sale adjustment, commissions and fees
+        cost_basis_total (Decimal): cost basis total after wash sale adjustment, commissions and fees
+        proceeds_price (Decimal): proceeds per share after commissions and fees
+        proceeds_total (Decimal): total proceeds after commissions and fees
         short_term_pnl (Decimal): short term pnl after wash sale adjustment. always 0 for non taxable accounts even
             if position was held short term
         long_term_pnl (Decimal): long term pnl after wash sale adjustment. non taxable accounts always show pnl here
@@ -67,13 +73,15 @@ class ClosedPosition(models.Model):
     close_date = models.DateField()
     security = models.ForeignKey(SecurityMaster, models.PROTECT)
     quantity = models.DecimalField(max_digits=12, decimal_places=4)
-    cost_basis_price = models.DecimalField(max_digits=9, decimal_places=3)
+    enter_price_net = models.DecimalField(max_digits=9, decimal_places=4)
+    close_price_net = models.DecimalField(max_digits=9, decimal_places=4)
+    cost_basis_price = models.DecimalField(max_digits=9, decimal_places=4)
     cost_basis_total = models.DecimalField(max_digits=13, decimal_places=3)
-    proceeds_price = models.DecimalField(max_digits=9, decimal_places=3)
+    proceeds_price = models.DecimalField(max_digits=9, decimal_places=4)
     proceeds_total = models.DecimalField(max_digits=13, decimal_places=3)
     short_term_pnl = models.DecimalField(max_digits=13, decimal_places=3)
     long_term_pnl = models.DecimalField(max_digits=13, decimal_places=3)
-    cost_basis_price_unadj = models.DecimalField(max_digits=9, decimal_places=3)
+    cost_basis_price_unadj = models.DecimalField(max_digits=9, decimal_places=4)
     cost_basis_total_unadj = models.DecimalField(max_digits=13, decimal_places=3)
     short_term_pnl_unadj = models.DecimalField(max_digits=13, decimal_places=3)
     long_term_pnl_unadj = models.DecimalField(max_digits=13, decimal_places=3)
@@ -114,6 +122,7 @@ class ClosedPosition(models.Model):
         "Proceeds", "Short-Term G/L", "Long-Term G/L", "Unadj Basis/Share", "Unadj Basis", "Unadj Short-Term G/L",
         "Unadj Long-Term G/L", "Unadj Date Acquired".
         Closed positions must be expanded to show the lots.
+        Do not remove the last two lines (total line and line of "")
 
         Args:
             file (Union[str, django.core.files.base.File]): name of file in media directory
@@ -166,6 +175,13 @@ class ClosedPosition(models.Model):
             df[col] = df[col].ffill()
         df = df[~df["Enter Date"].isnull()]
 
+        # TODO this does not work for short positions with the same enter and close date. no other closed position info
+        # TODO can fix the issue. would need to look at transaction quantity to determine if closed position was short
+        df[["enter_price_net", "close_price_net"]] = df.apply(
+            lambda row: pd.Series(
+                [row["Unadj Basis/Share"], row["Proceeds/Share"]] if row["Enter Date"] == row["Enter Date1"]
+                else [row["Proceeds/Share"], row["Unadj Basis/Share"]]), axis=1)
+
         df = df.drop(columns=["Security Description", "Account", "Enter Date1", "Close Date1"])
         df = df.rename(columns={
             "Quantity": "quantity", "Basis/Share": "cost_basis_price", "Proceeds/Share": "proceeds_price",
@@ -176,9 +192,9 @@ class ClosedPosition(models.Model):
         for col in df.columns[4:]:
             df[col] = df[col].replace("--", "0").str.replace(",", "").map(lambda x: round(Decimal(x), dp_dict[col]))
 
-        acc_dict = InvestmentAccount.objects.account_id_to_account_dict(
-            df["Account ID"].drop_duplicates().tolist(), Broker.FIDELITY)
-        sec_dict = SecurityMaster.objects.ticker_to_security_dict(df["Symbol"].drop_duplicates().tolist())
+        acc_dict = InvestmentAccount.objects.field_to_account_dict(
+            "account_id", df["Account ID"].drop_duplicates().tolist(), Broker.FIDELITY)
+        sec_dict = SecurityMaster.objects.field_to_security_dict("ticker", df["Symbol"].drop_duplicates().tolist())
 
         # investment account and close date combinations that have closed position(s) saved already
         rem_acc_dates = list(ClosedPosition.objects.values("investment_account", "close_date").distinct())
@@ -206,10 +222,10 @@ class ClosedPosition(models.Model):
                 sec_dict[row["Symbol"]] = security
 
             pos_list.append(ClosedPosition.objects.full_constructor(
-                inv_acc, row["Enter Date"], row["Close Date"], security, row["quantity"], row["cost_basis_price"],
-                row["cost_basis_total"], row["proceeds_price"], row["proceeds_total"], row["short_term_pnl"],
-                row["long_term_pnl"], row["cost_basis_price_unadj"], row["cost_basis_total_unadj"],
-                row["short_term_pnl_unadj"], row["long_term_pnl_unadj"], create=False))
+                inv_acc, row["Enter Date"], row["Close Date"], security, row["quantity"], row["enter_price_net"],
+                row["close_price_net"], row["cost_basis_price"], row["cost_basis_total"], row["proceeds_price"],
+                row["proceeds_total"], row["short_term_pnl"], row["long_term_pnl"], row["cost_basis_price_unadj"],
+                row["cost_basis_total_unadj"], row["short_term_pnl_unadj"], row["long_term_pnl_unadj"], create=False))
 
         with transaction.atomic():
             for pos in pos_list:
