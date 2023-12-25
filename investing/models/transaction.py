@@ -36,6 +36,7 @@ class Transaction(models.Model):
         CONV = "CONVERSION", gettext_lazy("Conversion")
         COUP_PMT = "COUP_PMT", gettext_lazy("Coupon Payment")
         DIV = "DIVIDEND", gettext_lazy("Dividend")
+        FEE = "FEE", gettext_lazy("Fee")
         INT_PMT = "INT_PMT", gettext_lazy("Interest Payment")
         LOAN = "LOAN", gettext_lazy("Loan")
         MERGER_OLD = "MERGER_OLD", gettext_lazy("Merger Old")
@@ -57,7 +58,7 @@ class Transaction(models.Model):
                 return TransactionType.CORP_ACT
             elif action_type in (ActionType.COUP_PMT, ActionType.INT_PMT):
                 return TransactionType.INTEREST
-            elif action_type in (ActionType.LOAN, ActionType.OPT_EXER, ActionType.OPT_EXP):
+            elif action_type in (ActionType.FEE, ActionType.LOAN, ActionType.OPT_EXER, ActionType.OPT_EXP):
                 return TransactionType.OTHER
             elif action_type in (ActionType.BUY, ActionType.BUY_COVER, ActionType.SELL, ActionType.SELL_SHORT):
                 return TransactionType.TRADE
@@ -81,7 +82,7 @@ class Transaction(models.Model):
             elif trans_type == TransactionType.INTEREST:
                 return ActionType.COUP_PMT, ActionType.INT_PMT
             elif trans_type == TransactionType.OTHER:
-                return ActionType.LOAN, ActionType.OPT_EXER, ActionType.OPT_EXP
+                return ActionType.FEE, ActionType.LOAN, ActionType.OPT_EXER, ActionType.OPT_EXP
             elif trans_type == TransactionType.TRADE:
                 return ActionType.BUY, ActionType.BUY_COVER, ActionType.SELL, ActionType.SELL_SHORT
             elif trans_type == TransactionType.TRANSFER:
@@ -163,10 +164,11 @@ class Transaction(models.Model):
                 a TransactionType and ActionType, transactions have trans_date before account create date
         """
         def get_trans_act_type(desc_str, qty):
-            # arranged from most likely to least likely transaction/action types
+            # arranged roughly from most likely to least likely transaction/action types
             if desc_str == "DIVIDEND RECEIVED":
                 return TransactionType.CORP_ACT, ActionType.DIV
-            elif desc_str[:10] == "YOU LOANED" or desc_str[-18:] == "MARK TO MARKET ADJ":
+            elif desc_str[-18:] == "MARK TO MARKET ADJ" or desc_str[:10] == "YOU LOANED" or \
+                    desc_str[:13] == "LOAN RETURNED":
                 return TransactionType.OTHER, ActionType.LOAN
             elif desc_str[:12] == "REINVESTMENT" or desc_str == "YOU BOUGHT":
                 return TransactionType.TRADE, ActionType.BUY
@@ -174,6 +176,8 @@ class Transaction(models.Model):
                     desc_str[:18] == "TRANSFER OF ASSETS" or desc_str[:14] == "TRANSFERRED TO" or \
                     desc_str[:10] == "WIRE TRANS" or desc_str == "RECEIVED FROM YOU":
                 return TransactionType.TRANSFER, ActionType.TRANSFER
+            elif desc_str == "INTEREST":
+                return TransactionType.INTEREST, ActionType.INT_PMT
             elif desc_str == "YOU SOLD":
                 return TransactionType.TRADE, ActionType.SELL
             elif desc_str == "YOU SOLD OPENING TRANSACTION":
@@ -182,6 +186,8 @@ class Transaction(models.Model):
                 return TransactionType.OTHER, ActionType.OPT_EXP
             elif desc_str == "YOU BOUGHT CLOSING TRANSACTION":
                 return TransactionType.TRADE, ActionType.BUY_COVER
+            elif desc_str == "FEE CHARGED":
+                return TransactionType.OTHER, ActionType.FEE
             elif desc_str == "DISTRIBUTION":
                 if Decimal.is_zero(qty):
                     raise ValueError("Quantity is 0 for DISTRIBUTION transaction. How to handle this?")
