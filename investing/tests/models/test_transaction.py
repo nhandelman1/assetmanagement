@@ -127,9 +127,15 @@ class TransactionTests(DjangoModelTestCaseBase):
         with self.subTest():
             self.equal(trans_list[20], TransactionTests.transaction_corp_act_merger_new())
         with self.subTest():
-            self.equal(trans_list[21], TransactionTests.transaction_other_loan_loan())
+            self.equal(trans_list[21], TransactionTests.transaction_other_loan_returned())
         with self.subTest():
-            self.equal(trans_list[22], TransactionTests.transaction_other_loan_mark())
+            self.equal(trans_list[22], TransactionTests.transaction_other_loan_loan())
+        with self.subTest():
+            self.equal(trans_list[23], TransactionTests.transaction_other_loan_mark())
+        with self.subTest():
+            self.equal(trans_list[24], TransactionTests.transaction_other_fee())
+        with self.subTest():
+            self.equal(trans_list[25], TransactionTests.transaction_interest_interest())
         with self.subTest():
             self.assertEqual(len(sec_ns_list), 1)
             SecurityMasterTests().equal(sec_ns_list[0], SecurityMasterTests.sm_spaxx(has_fidelity_lots=True))
@@ -189,6 +195,14 @@ class TransactionTests(DjangoModelTestCaseBase):
             commission=Decimal(0), fees=Decimal(0))
 
     @staticmethod
+    def transaction_interest_interest():
+        return Transaction(
+            investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(), trans_date=datetime.date(2022, 9, 6),
+            trans_type=TransactionType.INTEREST, action_type=ActionType.INT_PMT, description="INTEREST",
+            security=SecurityMasterTests.sm_aapl(), quantity=Decimal(0), price=Decimal(0), amount_net=Decimal("3.04"),
+            commission=Decimal(0), fees=Decimal(0))
+
+    @staticmethod
     def transaction_other_expired_call():
         # transaction in file is 2022-09-19 but the program changes it to 2022-09-16 to match expiry
         return Transaction(
@@ -199,12 +213,28 @@ class TransactionTests(DjangoModelTestCaseBase):
             amount_net=Decimal(0), commission=Decimal(0), fees=Decimal(0))
 
     @staticmethod
+    def transaction_other_fee():
+        return Transaction(
+            investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(), trans_date=datetime.date(2022, 9, 6),
+            trans_type=TransactionType.OTHER, action_type=ActionType.FEE, description="FEE CHARGED",
+            security=SecurityMasterTests.sm_aapl(), quantity=Decimal(0), price=Decimal(0), amount_net=Decimal("-4.59"),
+            commission=Decimal(0), fees=Decimal(0))
+
+    @staticmethod
+    def transaction_other_loan_returned():
+        return Transaction(
+            investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(), trans_date=datetime.date(2022, 9, 6),
+            trans_type=TransactionType.OTHER, action_type=ActionType.LOAN,
+            description="LOAN RETURNED YOU RETURNED VS Z21-323368-1", security=SecurityMasterTests.sm_aapl(),
+            quantity=Decimal("-107"), price=Decimal(0), amount_net=Decimal(0), commission=Decimal(0), fees=Decimal(0))
+
+    @staticmethod
     def transaction_other_loan_loan():
         return Transaction(
             investment_account=InvestmentAccountTests.inv_acc_fidelity_roth(), trans_date=datetime.date(2022, 9, 6),
             trans_type=TransactionType.OTHER, action_type=ActionType.LOAN, description="YOU LOANED VS Z21-323368-1",
-            security=SecurityMasterTests.sm_aapl(), quantity=Decimal("107"), price=Decimal(0),
-            amount_net=Decimal(0), commission=Decimal(0), fees=Decimal(0))
+            security=SecurityMasterTests.sm_aapl(), quantity=Decimal("107"), price=Decimal(0), amount_net=Decimal(0),
+            commission=Decimal(0), fees=Decimal(0))
 
     @staticmethod
     def transaction_other_loan_mark():
