@@ -23,11 +23,13 @@ class ServiceProvider(models.Model):
         Appending tax category is not required and should not be assumed by any users of this class
         """
         BCPH_REP = "BigCityPlumbingHeating-REP", gettext_lazy("BigCityPlumbingHeating-REP")
+        DC_CM = "DiscountCesspool-CM", gettext_lazy("DiscountCesspool-CM")
         DEP_DEP = "Depreciation-DEP", gettext_lazy("Depreciation-DEP")
         HD_SUP = "HomeDepot-SUP", gettext_lazy("HomeDepot-SUP")
         HOAT_REP = "HandymenOfAllTrades-REP", gettext_lazy("HandymenOfAllTrades-REP")
         KPC_CM = "KnockoutPestControl-CM", gettext_lazy("KnockoutPestControl-CM")
         MS_MI = "MorganStanley-MI", gettext_lazy("MorganStanley-MI")
+        MTP_REP = "MikeThePlumber-REP", gettext_lazy("MikeThePlumber-REP")
         NB_INS = "NarragansettBay-INS", gettext_lazy("NarragansettBay-INS")
         NG_UTI = "NationalGrid-UTI", gettext_lazy("NationalGrid-UTI")
         NH = "NicholasHandelman", gettext_lazy("NicholasHandelman")
