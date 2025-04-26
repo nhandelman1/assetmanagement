@@ -143,11 +143,11 @@ class SimpleBillData(SimpleServiceBillDataBase):
 
         SPE = ServiceProviderEnum
         Returns:
-            list[ServiceProviderEnum]: [SPE.BCPH_REP, SPE.HD_SUP, SPE.HOAT_REP, SPE.KPC_CM, SPE.MS_MI, SPE.NB_INS,
-                SPE.OH_INS, SPE.OC_UTI, SPE.OI_UTI, SPE.SCWA_UTI, SPE.SC_TAX, SPE.TPHS_REP, SPE.WMT_SUP,
+            list[ServiceProviderEnum]: [SPE.BCPH_REP, SPE.HD_SUP, SPE.HOAT_REP, SPE.LO_SUP, SPE.KPC_CM, SPE.MS_MI,
+                SPE.NB_INS, SPE.OH_INS, SPE.OC_UTI, SPE.OI_UTI, SPE.SCWA_UTI, SPE.SC_TAX, SPE.TPHS_REP, SPE.WMT_SUP,
                 SPE.WL_10_APT_TEN_INC, SPE.WP_REP,  SPE.VI_UTI, SPE.YTV_UTI]
         """
         SPE = ServiceProviderEnum
-        return [SPE.BCPH_REP, SPE.DC_CM, SPE.HD_SUP, SPE.HOAT_REP, SPE.KPC_CM, SPE.MTP_REP, SPE.NB_INS, SPE.OH_INS,
-                SPE.OC_UTI, SPE.OI_UTI, SPE.SCWA_UTI, SPE.SC_TAX, SPE.TPHS_REP, SPE.WMT_SUP, SPE.WL_10_APT_TEN_INC,
-                SPE.WP_REP, SPE.VI_UTI, SPE.YTV_UTI]
+        return [SPE.BCPH_REP, SPE.DC_CM, SPE.HD_SUP, SPE.HOAT_REP, SPE.KPC_CM, SPE.LO_SUP, SPE.MTP_REP, SPE.NB_INS,
+                SPE.OH_INS, SPE.OC_UTI, SPE.OI_UTI, SPE.SCWA_UTI, SPE.SC_TAX, SPE.TPHS_REP, SPE.WMT_SUP,
+                SPE.WL_10_APT_TEN_INC, SPE.WP_REP, SPE.VI_UTI, SPE.YTV_UTI]

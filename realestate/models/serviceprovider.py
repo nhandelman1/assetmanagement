@@ -28,6 +28,7 @@ class ServiceProvider(models.Model):
         HD_SUP = "HomeDepot-SUP", gettext_lazy("HomeDepot-SUP")
         HOAT_REP = "HandymenOfAllTrades-REP", gettext_lazy("HandymenOfAllTrades-REP")
         KPC_CM = "KnockoutPestControl-CM", gettext_lazy("KnockoutPestControl-CM")
+        LO_SUP = "Lowes-SUP", gettext_lazy("Lowes-SUP")
         MS_MI = "MorganStanley-MI", gettext_lazy("MorganStanley-MI")
         MTP_REP = "MikeThePlumber-REP", gettext_lazy("MikeThePlumber-REP")
         NB_INS = "NarragansettBay-INS", gettext_lazy("NarragansettBay-INS")
